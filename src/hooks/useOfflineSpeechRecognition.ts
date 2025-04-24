@@ -1,7 +1,12 @@
 
 import { useState, useCallback } from 'react';
-import { pipeline } from "@huggingface/transformers";
+import { pipeline, AutomaticSpeechRecognitionPipeline } from "@huggingface/transformers";
 import { useToast } from "@/hooks/use-toast";
+
+// Define types to match the expected interface from the transformer library
+interface TranscriptionResult {
+  text: string;
+}
 
 export const useOfflineSpeechRecognition = () => {
   const [isModelLoading, setIsModelLoading] = useState(false);
@@ -11,11 +16,12 @@ export const useOfflineSpeechRecognition = () => {
     try {
       setIsModelLoading(true);
       
+      // Create the pipeline with proper typing
       const transcriber = await pipeline(
         "automatic-speech-recognition",
         "onnx-community/whisper-tiny.en",
         { device: "webgpu" }
-      );
+      ) as AutomaticSpeechRecognitionPipeline;
       
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream);
@@ -27,8 +33,13 @@ export const useOfflineSpeechRecognition = () => {
       
       mediaRecorder.onstop = async () => {
         const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-        const result = await transcriber(audioBlob);
-        if (result.text) {
+        
+        // Properly handle the result by casting to the expected type
+        const result = await transcriber(audioBlob, { 
+          return_timestamps: false 
+        }) as TranscriptionResult;
+        
+        if (result && result.text) {
           onResult(result.text);
         }
       };
