@@ -66,11 +66,20 @@ const VoiceController: React.FC<VoiceControllerProps> = ({
   useEffect(() => {
     if (!isListening) return;
 
+    let timeoutId: NodeJS.Timeout;
+
     if (isOfflineMode) {
       startOfflineListening((word) => {
         setTranscript(prev => `${prev} ${word}`.trim());
       });
-      return () => stopOfflineListening();
+      timeoutId = setTimeout(() => {
+        stopOfflineListening();
+        onStartListening();  // This will set isListening to false
+      }, 2000);
+      return () => {
+        clearTimeout(timeoutId);
+        stopOfflineListening();
+      };
     }
 
     let recognition: SpeechRecognition;
@@ -147,12 +156,22 @@ const VoiceController: React.FC<VoiceControllerProps> = ({
       };
 
       recognition.start();
+      
+      // Set timeout to stop listening after 2 seconds
+      timeoutId = setTimeout(() => {
+        if (recognition) {
+          recognition.stop();
+          onStartListening();  // This will set isListening to false
+        }
+      }, 2000);
+
     } catch (error) {
       console.error('Speech recognition is not supported:', error);
       setRecognitionError('Speech recognition is not supported in your browser');
     }
 
     return () => {
+      clearTimeout(timeoutId);
       if (recognition) {
         recognition.stop();
       }
