@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 
 // Add TypeScript interfaces for the Web Speech API
@@ -69,20 +69,19 @@ const VoiceController: React.FC<VoiceControllerProps> = ({
       recognition.lang = 'en-US';
 
       recognition.onresult = (event: SpeechRecognitionEvent) => {
-        const words = event.results[0][0].transcript
-          .trim()
-          .split(' ')
-          .map(Number)
-          .filter(num => !isNaN(num));
+        const transcript = event.results[0][0].transcript.trim();
+        const words = transcript.split(' ').map(Number).filter(num => !isNaN(num));
 
         if (words.length === 3) {
+          console.log("Coordinates received:", words);
           onCoordinatesReceived(words);
         } else {
-          console.log('Please say three numbers for coordinates');
+          console.log('Please say three numbers for coordinates. Received:', transcript);
         }
       };
 
       recognition.onend = () => {
+        console.log("Speech recognition ended");
         if (isListening) {
           onCoordinatesReceived([]);
         }
