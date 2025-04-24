@@ -84,27 +84,41 @@ const VoiceController: React.FC<VoiceControllerProps> = ({
         setTranscript(fullTranscript);
         console.log("Raw transcript:", fullTranscript);
         
-        // Extract numbers from the transcript
-        const words = fullTranscript.split(/\s+/).map(word => {
-          // Convert word numbers to digits
-          const numberWords: Record<string, number> = {
-            'one': 1, 'two': 2, 'three': 3, 'four': 4,
-            'won': 1, 'too': 2, 'to': 2, 'for': 4, 'fore': 4
-          };
-          
-          // Try to parse the word as a number or map it if it's a word number
-          const parsed = parseInt(word, 10);
-          if (!isNaN(parsed)) return parsed;
-          return numberWords[word.toLowerCase()] || NaN;
-        }).filter(num => !isNaN(num));
-
-        console.log("Extracted coordinates:", words);
+        // Extract coordinates using multiple methods
+        let coordinates: number[] = [];
         
-        if (words.length === 3) {
-          console.log("Valid coordinates received:", words);
-          onCoordinatesReceived(words);
+        // Method 1: Check if it's a single number that needs to be split
+        // This handles cases like "331" to become [3,3,1]
+        if (/^\d+$/.test(fullTranscript.replace(/\s+/g, ''))) {
+          const digits = fullTranscript.replace(/\s+/g, '').split('');
+          if (digits.length === 3) {
+            coordinates = digits.map(Number);
+          }
+        }
+        
+        // Method 2: Extract individual numbers (if Method 1 didn't work)
+        if (coordinates.length !== 3) {
+          coordinates = fullTranscript.split(/\s+/).map(word => {
+            // Convert word numbers to digits
+            const numberWords: Record<string, number> = {
+              'one': 1, 'two': 2, 'three': 3, 'four': 4,
+              'won': 1, 'too': 2, 'to': 2, 'for': 4, 'fore': 4
+            };
+            
+            // Try to parse the word as a number or map it if it's a word number
+            const parsed = parseInt(word, 10);
+            if (!isNaN(parsed)) return parsed;
+            return numberWords[word.toLowerCase()] || NaN;
+          }).filter(num => !isNaN(num));
+        }
+
+        console.log("Extracted coordinates:", coordinates);
+        
+        if (coordinates.length === 3) {
+          console.log("Valid coordinates received:", coordinates);
+          onCoordinatesReceived(coordinates);
         } else {
-          console.log('Please say three numbers for coordinates. Received:', words);
+          console.log('Please say three numbers for coordinates. Received:', coordinates);
         }
       };
 
