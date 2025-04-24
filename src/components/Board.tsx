@@ -4,9 +4,10 @@ import React from 'react';
 interface BoardProps {
   markers: number[][][];
   currentPlayer: number;
+  onCellClick: (x: number, y: number, z: number) => void;
 }
 
-const Board: React.FC<BoardProps> = ({ markers, currentPlayer }) => {
+const Board: React.FC<BoardProps> = ({ markers, currentPlayer, onCellClick }) => {
   // Safely render a cell or return an empty cell if coordinates are invalid
   const renderCell = (x: number, y: number, z: number) => {
     // Handle potential undefined values safely
@@ -16,12 +17,17 @@ const Board: React.FC<BoardProps> = ({ markers, currentPlayer }) => {
     return (
       <div 
         key={`cell-${x}-${y}-${z}`}
-        className={`${color} w-10 h-10 flex items-center justify-center border border-gray-400`}
-        onClick={() => console.log(`Clicked: ${x+1}, ${y+1}, ${z+1}`)}
+        className={`${color} w-10 h-10 flex items-center justify-center border border-gray-400 cursor-pointer hover:opacity-80 transition-opacity`}
+        onClick={() => onCellClick(x, y, z)}
       >
         {value !== 0 && (
           <span className="text-white font-bold text-lg">
             {value === 1 ? 'X' : 'O'}
+          </span>
+        )}
+        {value === 0 && (
+          <span className="text-gray-400 opacity-0 hover:opacity-100">
+            {x+1},{y+1},{z+1}
           </span>
         )}
       </div>

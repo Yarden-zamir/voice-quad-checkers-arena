@@ -16,25 +16,8 @@ const Index = () => {
     [[0,0,0,0], [0,0,0,0], [0,0,0,0], [0,0,0,0]]
   ]);
 
-  const handleCoordinates = useCallback((coordinates: number[]) => {
-    // Make sure we have all three coordinates
-    if (!coordinates || coordinates.length !== 3) {
-      console.log("Invalid coordinates received", coordinates);
-      setIsListening(false);
-      return;
-    }
-
-    // Adjust coordinates to be 0-based and within bounds
-    const [x, y, z] = coordinates.map(coord => Math.min(Math.max(coord, 1), 4) - 1);
-    
-    // Check if coordinates are valid
-    if (x === undefined || y === undefined || z === undefined) {
-      console.log("Invalid coordinates after mapping", { x, y, z });
-      setIsListening(false);
-      return;
-    }
-
-    // Update markers with bounds checking
+  const handleCellClick = useCallback((x: number, y: number, z: number) => {
+    // Use the same logic as handleCoordinates, but for direct clicks
     setMarkers(prev => {
       // Ensure we have a valid position to modify
       if (!prev[x] || !prev[x][y] || prev[x][y][z] === undefined) {
@@ -58,12 +41,49 @@ const Index = () => {
       const newMarkers = JSON.parse(JSON.stringify(prev));
       newMarkers[x][y][z] = currentPlayer;
       
+      toast({
+        title: "Move placed",
+        description: `Player ${currentPlayer} placed at position (${x+1}, ${y+1}, ${z+1})`,
+      });
+
       return newMarkers;
     });
 
     setCurrentPlayer(current => current === 1 ? 2 : 1);
-    setIsListening(false);
   }, [currentPlayer, toast]);
+
+  const handleCoordinates = useCallback((coordinates: number[]) => {
+    // Make sure we have all three coordinates
+    if (!coordinates || coordinates.length !== 3) {
+      console.log("Invalid coordinates received", coordinates);
+      setIsListening(false);
+      if (coordinates.length > 0) {
+        toast({
+          title: "Invalid coordinates",
+          description: `Please provide exactly 3 numbers (x, y, z). Received: ${coordinates.join(', ')}`,
+        });
+      }
+      return;
+    }
+
+    // Adjust coordinates to be 0-based and within bounds
+    const [x, y, z] = coordinates.map(coord => Math.min(Math.max(coord, 1), 4) - 1);
+    
+    // Check if coordinates are valid
+    if (x === undefined || y === undefined || z === undefined) {
+      console.log("Invalid coordinates after mapping", { x, y, z });
+      setIsListening(false);
+      toast({
+        title: "Invalid coordinates",
+        description: "Please provide valid x, y, z coordinates between 1 and 4",
+      });
+      return;
+    }
+
+    // Use the cell click handler for consistency
+    handleCellClick(x, y, z);
+    setIsListening(false);
+  }, [handleCellClick]);
 
   return (
     <div className="relative">
@@ -75,6 +95,7 @@ const Index = () => {
       <GameBoard 
         markers={markers}
         currentPlayer={currentPlayer}
+        onCellClick={handleCellClick}
       />
       <VoiceController 
         onCoordinatesReceived={handleCoordinates}

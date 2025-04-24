@@ -1,6 +1,7 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
+import { Mic, Loader } from "lucide-react";
 
 // Add TypeScript interfaces for the Web Speech API
 interface SpeechRecognitionEvent extends Event {
@@ -57,6 +58,9 @@ const VoiceController: React.FC<VoiceControllerProps> = ({
   isListening,
   onStartListening,
 }) => {
+  const [transcript, setTranscript] = useState('');
+  const [recognitionError, setRecognitionError] = useState('');
+
   useEffect(() => {
     if (!isListening) return;
 
@@ -64,20 +68,35 @@ const VoiceController: React.FC<VoiceControllerProps> = ({
     
     try {
       const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+      
+      if (!SpeechRecognitionAPI) {
+        console.error("Speech recognition not supported in this browser");
+        setRecognitionError("Speech recognition not supported in your browser");
+        return;
+      }
+      
       recognition = new SpeechRecognitionAPI();
       recognition.continuous = false;
       recognition.lang = 'en-US';
 
       recognition.onresult = (event: SpeechRecognitionEvent) => {
-        const transcript = event.results[0][0].transcript.trim();
-        const words = transcript.split(' ').map(Number).filter(num => !isNaN(num));
+        const fullTranscript = event.results[0][0].transcript.trim();
+        setTranscript(fullTranscript);
+        console.log("Raw transcript:", fullTranscript);
+        
+        const words = fullTranscript.split(' ').map(Number).filter(num => !isNaN(num));
 
         if (words.length === 3) {
           console.log("Coordinates received:", words);
           onCoordinatesReceived(words);
         } else {
-          console.log('Please say three numbers for coordinates. Received:', transcript);
+          console.log('Please say three numbers for coordinates. Received:', fullTranscript);
         }
+      };
+
+      recognition.onerror = (event: any) => {
+        console.error("Speech recognition error:", event.error);
+        setRecognitionError(`Error: ${event.error}`);
       };
 
       recognition.onend = () => {
@@ -90,6 +109,7 @@ const VoiceController: React.FC<VoiceControllerProps> = ({
       recognition.start();
     } catch (error) {
       console.error('Speech recognition is not supported:', error);
+      setRecognitionError('Speech recognition is not supported in your browser');
     }
 
     return () => {
@@ -100,15 +120,37 @@ const VoiceController: React.FC<VoiceControllerProps> = ({
   }, [isListening, onCoordinatesReceived]);
 
   return (
-    <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-10">
+    <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-10 flex flex-col items-center gap-2">
+      {transcript && (
+        <div className="bg-white px-4 py-2 rounded shadow mb-2">
+          <p>You said: <strong>{transcript}</strong></p>
+        </div>
+      )}
+      
+      {recognitionError && (
+        <div className="bg-red-50 text-red-700 px-4 py-2 rounded shadow mb-2">
+          <p>{recognitionError}</p>
+        </div>
+      )}
+      
       <Button 
         onClick={onStartListening}
         disabled={isListening}
-        className={`px-8 py-4 text-lg ${
+        className={`px-8 py-4 text-lg flex gap-2 items-center ${
           isListening ? 'bg-red-500' : 'bg-primary hover:bg-primary/90'
         }`}
       >
-        {isListening ? 'Listening...' : 'Start Speaking'}
+        {isListening ? (
+          <>
+            <Loader className="animate-spin h-5 w-5" />
+            Listening...
+          </>
+        ) : (
+          <>
+            <Mic className="h-5 w-5" />
+            Speak Coordinates
+          </>
+        )}
       </Button>
     </div>
   );
