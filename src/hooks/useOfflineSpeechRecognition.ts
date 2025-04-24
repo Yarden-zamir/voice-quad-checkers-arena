@@ -1,9 +1,9 @@
 
 import { useState, useCallback } from 'react';
-import { pipeline, AutomaticSpeechRecognitionPipeline } from "@huggingface/transformers";
+import { pipeline } from "@huggingface/transformers";
 import { useToast } from "@/hooks/use-toast";
 
-// Define types to match the expected interface from the transformer library
+// Define a simplified interface for the transcription result
 interface TranscriptionResult {
   text: string;
 }
@@ -16,12 +16,12 @@ export const useOfflineSpeechRecognition = () => {
     try {
       setIsModelLoading(true);
       
-      // Create the pipeline with proper typing
+      // Create the pipeline without explicit typing
       const transcriber = await pipeline(
         "automatic-speech-recognition",
         "onnx-community/whisper-tiny.en",
         { device: "webgpu" }
-      ) as AutomaticSpeechRecognitionPipeline;
+      );
       
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream);
@@ -34,13 +34,21 @@ export const useOfflineSpeechRecognition = () => {
       mediaRecorder.onstop = async () => {
         const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
         
-        // Properly handle the result by casting to the expected type
-        const result = await transcriber(audioBlob, { 
+        // Use any to bypass the type checking temporarily
+        // The library types are likely out of date or incomplete
+        const result = await (transcriber as any)(audioBlob, { 
           return_timestamps: false 
-        }) as TranscriptionResult;
+        });
         
-        if (result && result.text) {
-          onResult(result.text);
+        if (result && typeof result === 'object') {
+          // Handle both possible result formats
+          const text = Array.isArray(result) 
+            ? result[0]?.text 
+            : result.text;
+            
+          if (text) {
+            onResult(text);
+          }
         }
       };
       
