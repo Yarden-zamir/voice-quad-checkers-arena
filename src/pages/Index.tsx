@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import GameBoard from '../components/GameBoard';
 import VoiceController from '../components/VoiceController';
@@ -8,7 +9,6 @@ import { checkWin } from '../utils/winConditions';
 const Index = () => {
   const { toast } = useToast();
   const [currentPlayer, setCurrentPlayer] = useState(1);
-  const [isListening, setIsListening] = useState(false);
   const [gameOver, setGameOver] = useState(false);
   // Initialize the 4x4x4 array
   const [markers, setMarkers] = useState([
@@ -78,7 +78,6 @@ const Index = () => {
     // Make sure we have all three coordinates
     if (!coordinates || coordinates.length !== 3) {
       console.log("Invalid coordinates received", coordinates);
-      setIsListening(false);
       if (coordinates.length > 0) {
         toast({
           title: "Invalid coordinates",
@@ -97,7 +96,6 @@ const Index = () => {
     // Check if coordinates are valid
     if (x === undefined || y === undefined || z === undefined) {
       console.log("Invalid coordinates after mapping", { x, y, z });
-      setIsListening(false);
       toast({
         title: "Invalid coordinates",
         description: "Please provide valid x, y, z coordinates between 1 and 4",
@@ -107,7 +105,6 @@ const Index = () => {
 
     // Use the cell click handler for consistency
     handleCellClick(x, y, z);
-    setIsListening(false);
   }, [handleCellClick, toast]);
 
   return (
@@ -124,8 +121,6 @@ const Index = () => {
       />
       <VoiceController 
         onCoordinatesReceived={handleCoordinates}
-        isListening={isListening}
-        onStartListening={() => !gameOver && setIsListening(true)}
       />
     </div>
   );
