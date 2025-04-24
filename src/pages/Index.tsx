@@ -8,11 +8,12 @@ const Index = () => {
   const { toast } = useToast();
   const [currentPlayer, setCurrentPlayer] = useState(1);
   const [isListening, setIsListening] = useState(false);
-  // Initialize the 3D array properly to avoid undefined access
+  // Initialize the 4x4x4 array
   const [markers, setMarkers] = useState([
-    [[0, 0, 0], [0, 0, 0], [0, 0, 0]],
-    [[0, 0, 0], [0, 0, 0], [0, 0, 0]],
-    [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
+    [[0,0,0,0], [0,0,0,0], [0,0,0,0], [0,0,0,0]],
+    [[0,0,0,0], [0,0,0,0], [0,0,0,0], [0,0,0,0]],
+    [[0,0,0,0], [0,0,0,0], [0,0,0,0], [0,0,0,0]],
+    [[0,0,0,0], [0,0,0,0], [0,0,0,0], [0,0,0,0]]
   ]);
 
   const handleCoordinates = useCallback((coordinates: number[]) => {
@@ -24,7 +25,7 @@ const Index = () => {
     }
 
     // Adjust coordinates to be 0-based and within bounds
-    const [x, y, z] = coordinates.map(coord => Math.min(Math.max(coord, 1), 3) - 1);
+    const [x, y, z] = coordinates.map(coord => Math.min(Math.max(coord, 1), 4) - 1);
     
     // Check if coordinates are valid
     if (x === undefined || y === undefined || z === undefined) {

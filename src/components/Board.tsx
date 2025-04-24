@@ -16,11 +16,11 @@ const Board: React.FC<BoardProps> = ({ markers, currentPlayer }) => {
     return (
       <div 
         key={`cell-${x}-${y}-${z}`}
-        className={`${color} w-12 h-12 flex items-center justify-center border border-gray-400`}
+        className={`${color} w-10 h-10 flex items-center justify-center border border-gray-400`}
         onClick={() => console.log(`Clicked: ${x+1}, ${y+1}, ${z+1}`)}
       >
         {value !== 0 && (
-          <span className="text-white font-bold text-xl">
+          <span className="text-white font-bold text-lg">
             {value === 1 ? 'X' : 'O'}
           </span>
         )}
@@ -28,13 +28,13 @@ const Board: React.FC<BoardProps> = ({ markers, currentPlayer }) => {
     );
   };
 
-  // Render a single 3x3 grid (slice)
+  // Render a single 4x4 grid (slice)
   const renderGrid = (gridIndex: number) => {
     return (
-      <div key={`grid-${gridIndex}`} className="grid grid-cols-3 gap-1 m-4">
-        {Array.from({ length: 3 }, (_, y) => (
+      <div key={`grid-${gridIndex}`} className="grid grid-cols-4 gap-1 m-4">
+        {Array.from({ length: 4 }, (_, y) => (
           // For each row
-          Array.from({ length: 3 }, (_, z) => (
+          Array.from({ length: 4 }, (_, z) => (
             // Render the cell
             renderCell(gridIndex, y, z)
           ))
@@ -44,8 +44,8 @@ const Board: React.FC<BoardProps> = ({ markers, currentPlayer }) => {
   };
 
   return (
-    <div className="flex flex-wrap justify-center max-w-4xl mx-auto">
-      {Array.from({ length: 3 }, (_, index) => renderGrid(index))}
+    <div className="flex flex-wrap justify-center max-w-5xl mx-auto">
+      {Array.from({ length: 4 }, (_, index) => renderGrid(index))}
       <div className="w-full text-center mt-4">
         <div className="inline-block px-4 py-2 bg-white rounded-lg shadow">
           <span className="font-bold">Current Player: </span>
