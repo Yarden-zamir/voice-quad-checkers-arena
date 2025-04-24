@@ -22,7 +22,7 @@ const VoiceController: React.FC<VoiceControllerProps> = ({
   useEffect(() => {
     if (!isListening) return;
 
-    let recognition: SpeechRecognition;
+    let recognition: SpeechRecognition | undefined;
     
     try {
       const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -43,7 +43,7 @@ const VoiceController: React.FC<VoiceControllerProps> = ({
         processTranscript(fullTranscript);
       };
 
-      recognition.onerror = (event: any) => {
+      recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
         console.error("Speech recognition error:", event.error);
         setRecognitionError(`Error: ${event.error}`);
       };
