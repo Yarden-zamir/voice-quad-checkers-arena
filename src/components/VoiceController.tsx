@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Mic, Loader, WifiOff } from "lucide-react";
 import { useOfflineSpeechRecognition } from '../hooks/useOfflineSpeechRecognition';
+import { useToast } from "@/hooks/use-toast";
 
 interface SpeechRecognitionEvent extends Event {
   results: SpeechRecognitionResultList;
@@ -60,6 +61,7 @@ const VoiceController: React.FC<VoiceControllerProps> = ({
   const [recognitionError, setRecognitionError] = useState('');
   const [isOfflineMode, setIsOfflineMode] = useState(false);
   const { startListening: startOfflineListening, stopListening: stopOfflineListening, isModelLoading } = useOfflineSpeechRecognition();
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!isListening) return;
@@ -92,25 +94,28 @@ const VoiceController: React.FC<VoiceControllerProps> = ({
         console.log("Raw transcript:", fullTranscript);
         
         let coordinates: number[] = [];
+        let processedTranscript = fullTranscript;
         
-        if (/^\d+$/.test(fullTranscript.replace(/\s+/g, ''))) {
-          const digits = fullTranscript.replace(/\s+/g, '').split('');
-          if (digits.length === 3) {
-            coordinates = digits.map(Number);
+        if (/^\d+/.test(processedTranscript)) {
+          const firstThreeDigits = processedTranscript.match(/\d+/g)?.slice(0, 3).join('');
+          if (firstThreeDigits && firstThreeDigits.length === 3) {
+            coordinates = firstThreeDigits.split('').map(Number);
           }
-        }
-        
-        if (coordinates.length !== 3) {
-          coordinates = fullTranscript.split(/\s+/).map(word => {
-            const numberWords: Record<string, number> = {
-              'one': 1, 'two': 2, 'three': 3, 'four': 4,
-              'won': 1, 'too': 2, 'to': 2, 'for': 4, 'fore': 4
-            };
-            
-            const parsed = parseInt(word, 10);
-            if (!isNaN(parsed)) return parsed;
-            return numberWords[word.toLowerCase()] || NaN;
-          }).filter(num => !isNaN(num));
+        } else {
+          const words = processedTranscript.split(/\s+/);
+          const numberWords: Record<string, number> = {
+            'one': 1, 'two': 2, 'three': 3, 'four': 4,
+            'won': 1, 'too': 2, 'to': 2, 'for': 4, 'fore': 4
+          };
+          
+          coordinates = words
+            .map(word => {
+              const parsed = parseInt(word, 10);
+              if (!isNaN(parsed)) return parsed;
+              return numberWords[word.toLowerCase()] || NaN;
+            })
+            .filter(num => !isNaN(num))
+            .slice(0, 3);
         }
 
         console.log("Extracted coordinates:", coordinates);
@@ -118,8 +123,17 @@ const VoiceController: React.FC<VoiceControllerProps> = ({
         if (coordinates.length === 3) {
           console.log("Valid coordinates received:", coordinates);
           onCoordinatesReceived(coordinates);
+          toast({
+            title: "Coordinates Received",
+            description: `Using ${coordinates.join(', ')} [Full transcript: ${fullTranscript}]`
+          });
         } else {
           console.log('Please say three numbers for coordinates. Received:', coordinates);
+          toast({
+            title: "Invalid Input",
+            description: `Please say three numbers (received ${coordinates.length}). [Full transcript: ${fullTranscript}]`,
+            variant: "destructive"
+          });
         }
       };
 
