@@ -3,6 +3,11 @@ import { useState, useEffect, useCallback } from 'react';
 import * as speechCommands from '@tensorflow-models/speech-commands';
 import { useToast } from "@/components/ui/use-toast";
 
+// Define the interface for the speech command result
+interface SpeechCommandResult {
+  scores: Float32Array;
+}
+
 export const useOfflineSpeechRecognition = () => {
   const [model, setModel] = useState<speechCommands.SpeechCommandRecognizer | null>(null);
   const [isModelLoading, setIsModelLoading] = useState(false);
@@ -41,12 +46,14 @@ export const useOfflineSpeechRecognition = () => {
 
     try {
       await model.listen(
-        (result) => {
+        async (result: SpeechCommandResult) => {
+          // Convert the Float32Array to a regular array
           const scores = Array.from(result.scores);
           const maxScore = Math.max(...scores);
           const maxIndex = scores.indexOf(maxScore);
           const word = model.wordLabels()[maxIndex];
           onResult(word);
+          return Promise.resolve(); // Return Promise<void> to match RecognizerCallback
         },
         {
           includeSpectrogram: true,
