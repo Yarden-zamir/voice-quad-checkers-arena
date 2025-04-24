@@ -8,14 +8,43 @@ const Index = () => {
   const { toast } = useToast();
   const [currentPlayer, setCurrentPlayer] = useState(1);
   const [isListening, setIsListening] = useState(false);
-  const [markers, setMarkers] = useState(Array(3).fill(null).map(() => 
-    Array(3).fill(null).map(() => Array(3).fill(0))
-  ));
+  // Initialize the 3D array properly to avoid undefined access
+  const [markers, setMarkers] = useState([
+    [[0, 0, 0], [0, 0, 0], [0, 0, 0]],
+    [[0, 0, 0], [0, 0, 0], [0, 0, 0]],
+    [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
+  ]);
 
   const handleCoordinates = useCallback((coordinates: number[]) => {
+    // Make sure we have all three coordinates
+    if (!coordinates || coordinates.length !== 3) {
+      console.log("Invalid coordinates received", coordinates);
+      setIsListening(false);
+      return;
+    }
+
+    // Adjust coordinates to be 0-based and within bounds
     const [x, y, z] = coordinates.map(coord => Math.min(Math.max(coord, 1), 3) - 1);
     
+    // Check if coordinates are valid
+    if (x === undefined || y === undefined || z === undefined) {
+      console.log("Invalid coordinates after mapping", { x, y, z });
+      setIsListening(false);
+      return;
+    }
+
+    // Update markers with bounds checking
     setMarkers(prev => {
+      // Ensure we have a valid position to modify
+      if (!prev[x] || !prev[x][y] || prev[x][y][z] === undefined) {
+        toast({
+          title: "Invalid position",
+          description: `Coordinates (${x+1}, ${y+1}, ${z+1}) are out of bounds`,
+        });
+        return prev;
+      }
+
+      // Check if position is already taken
       if (prev[x][y][z] !== 0) {
         toast({
           title: "Position already taken",
@@ -24,9 +53,8 @@ const Index = () => {
         return prev;
       }
 
-      const newMarkers = [...prev];
-      newMarkers[x] = [...prev[x]];
-      newMarkers[x][y] = [...prev[x][y]];
+      // Create a deep copy of the markers array
+      const newMarkers = JSON.parse(JSON.stringify(prev));
       newMarkers[x][y][z] = currentPlayer;
       
       return newMarkers;
