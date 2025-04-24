@@ -1,9 +1,8 @@
-
 import React, { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Mic, Loader } from "lucide-react";
+import { Mic, Loader, WifiOff } from "lucide-react";
+import { useOfflineSpeechRecognition } from '../hooks/useOfflineSpeechRecognition';
 
-// Add TypeScript interfaces for the Web Speech API
 interface SpeechRecognitionEvent extends Event {
   results: SpeechRecognitionResultList;
 }
@@ -39,7 +38,6 @@ interface SpeechRecognition extends EventTarget {
   onend: (event: Event) => void;
 }
 
-// Add global interfaces
 declare global {
   interface Window {
     SpeechRecognition: new () => SpeechRecognition;
@@ -60,9 +58,18 @@ const VoiceController: React.FC<VoiceControllerProps> = ({
 }) => {
   const [transcript, setTranscript] = useState('');
   const [recognitionError, setRecognitionError] = useState('');
+  const [isOfflineMode, setIsOfflineMode] = useState(false);
+  const { startListening: startOfflineListening, stopListening: stopOfflineListening, isModelLoading } = useOfflineSpeechRecognition();
 
   useEffect(() => {
     if (!isListening) return;
+
+    if (isOfflineMode) {
+      startOfflineListening((word) => {
+        setTranscript(prev => `${prev} ${word}`.trim());
+      });
+      return () => stopOfflineListening();
+    }
 
     let recognition: SpeechRecognition;
     
@@ -84,11 +91,8 @@ const VoiceController: React.FC<VoiceControllerProps> = ({
         setTranscript(fullTranscript);
         console.log("Raw transcript:", fullTranscript);
         
-        // Extract coordinates using multiple methods
         let coordinates: number[] = [];
         
-        // Method 1: Check if it's a single number that needs to be split
-        // This handles cases like "331" to become [3,3,1]
         if (/^\d+$/.test(fullTranscript.replace(/\s+/g, ''))) {
           const digits = fullTranscript.replace(/\s+/g, '').split('');
           if (digits.length === 3) {
@@ -96,16 +100,13 @@ const VoiceController: React.FC<VoiceControllerProps> = ({
           }
         }
         
-        // Method 2: Extract individual numbers (if Method 1 didn't work)
         if (coordinates.length !== 3) {
           coordinates = fullTranscript.split(/\s+/).map(word => {
-            // Convert word numbers to digits
             const numberWords: Record<string, number> = {
               'one': 1, 'two': 2, 'three': 3, 'four': 4,
               'won': 1, 'too': 2, 'to': 2, 'for': 4, 'fore': 4
             };
             
-            // Try to parse the word as a number or map it if it's a word number
             const parsed = parseInt(word, 10);
             if (!isNaN(parsed)) return parsed;
             return numberWords[word.toLowerCase()] || NaN;
@@ -129,7 +130,6 @@ const VoiceController: React.FC<VoiceControllerProps> = ({
 
       recognition.onend = () => {
         console.log("Speech recognition ended");
-        // Don't automatically call onCoordinatesReceived with empty array
       };
 
       recognition.start();
@@ -143,10 +143,19 @@ const VoiceController: React.FC<VoiceControllerProps> = ({
         recognition.stop();
       }
     };
-  }, [isListening, onCoordinatesReceived]);
+  }, [isListening, onCoordinatesReceived, isOfflineMode]);
 
   return (
     <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-10 flex flex-col items-center gap-4">
+      <Button
+        onClick={() => setIsOfflineMode(prev => !prev)}
+        variant="outline"
+        className="mb-2"
+      >
+        <WifiOff className={`mr-2 ${isOfflineMode ? 'text-red-500' : ''}`} />
+        {isOfflineMode ? 'Offline Mode' : 'Online Mode'}
+      </Button>
+
       {transcript && (
         <div className="bg-white px-4 py-2 rounded shadow mb-2">
           <p>You said: <strong>{transcript}</strong></p>
@@ -161,15 +170,15 @@ const VoiceController: React.FC<VoiceControllerProps> = ({
       
       <Button 
         onClick={onStartListening}
-        disabled={isListening}
+        disabled={isListening || isModelLoading}
         className={`px-12 py-8 text-2xl flex gap-3 items-center ${
           isListening ? 'bg-red-500' : 'bg-primary hover:bg-primary/90'
         }`}
       >
-        {isListening ? (
+        {isListening || isModelLoading ? (
           <>
             <Loader className="animate-spin h-8 w-8" />
-            Listening...
+            {isModelLoading ? 'Loading Model...' : 'Listening...'}
           </>
         ) : (
           <>
