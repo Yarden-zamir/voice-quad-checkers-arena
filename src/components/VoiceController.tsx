@@ -23,6 +23,7 @@ const VoiceController: React.FC<VoiceControllerProps> = ({
     if (!isListening) return;
 
     let recognition: SpeechRecognition | undefined;
+    let listenTimeout: number | undefined;
     
     try {
       const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -34,13 +35,34 @@ const VoiceController: React.FC<VoiceControllerProps> = ({
       }
       
       recognition = new SpeechRecognitionAPI();
-      recognition.continuous = false;
+      recognition.continuous = true; // Changed to true to continue listening
+      recognition.interimResults = true; // Get interim results
       recognition.lang = 'en-US';
 
       recognition.onresult = (event: SpeechRecognitionEvent) => {
-        const fullTranscript = event.results[0][0].transcript.trim();
-        setTranscript(fullTranscript);
-        processTranscript(fullTranscript);
+        const currentTranscript = Array.from(event.results)
+          .map(result => result[0].transcript)
+          .join(' ')
+          .trim();
+          
+        setTranscript(currentTranscript);
+        
+        // Only process when we have a final result
+        const mostRecentResult = event.results[event.results.length - 1];
+        if (mostRecentResult.isFinal) {
+          const hasThreeDigits = /\b\d{3}\b/.test(currentTranscript) || 
+                                 countNumberWords(currentTranscript) >= 3;
+                                 
+          if (hasThreeDigits) {
+            // Stop listening once we have what looks like three digits
+            if (recognition) {
+              recognition.stop();
+              clearTimeout(listenTimeout);
+              processTranscript(currentTranscript);
+              onStartListening(); // Reset listening state
+            }
+          }
+        }
       };
 
       recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
@@ -49,12 +71,25 @@ const VoiceController: React.FC<VoiceControllerProps> = ({
       };
 
       recognition.start();
-      setTimeout(() => {
+      
+      // Set a maximum listening time of 5 seconds
+      listenTimeout = window.setTimeout(() => {
         if (recognition) {
           recognition.stop();
-          onStartListening();  // This will set isListening to false
+          onStartListening();  // Reset listening state
+          
+          // Process whatever we have if we timed out
+          if (transcript) {
+            processTranscript(transcript);
+          } else {
+            toast({
+              title: "No input detected",
+              description: "Please try speaking again",
+              variant: "destructive"
+            });
+          }
         }
-      }, 2000);
+      }, 5000); // Increased to 5 seconds from 2 seconds
 
     } catch (error) {
       console.error('Speech recognition is not supported:', error);
@@ -65,35 +100,60 @@ const VoiceController: React.FC<VoiceControllerProps> = ({
       if (recognition) {
         recognition.stop();
       }
+      if (listenTimeout) {
+        clearTimeout(listenTimeout);
+      }
     };
-  }, [isListening, onStartListening]);
+  }, [isListening, onStartListening, toast, transcript]);
+
+  // Helper function to count number words in a string
+  const countNumberWords = (text: string): number => {
+    const numberWords = [
+      'zero', 'one', 'two', 'three', 'four', 'five', 'six', 
+      'seven', 'eight', 'nine', 'won', 'too', 'to', 'for', 'fore'
+    ];
+    
+    const words = text.toLowerCase().split(/\s+/);
+    const digits = words.filter(word => 
+      !isNaN(parseInt(word)) || numberWords.includes(word)
+    );
+    
+    return digits.length;
+  };
 
   const processTranscript = (fullTranscript: string) => {
     console.log("Raw transcript:", fullTranscript);
     
     let coordinates: number[] = [];
-    let processedTranscript = fullTranscript.split(' ')[0];
     
-    if (/^\d+/.test(processedTranscript)) {
-      const firstThreeDigits = processedTranscript.match(/\d+/g)?.slice(0, 3).join('');
-      if (firstThreeDigits && firstThreeDigits.length === 3) {
-        coordinates = firstThreeDigits.split('').map(Number);
-      }
+    // Try to extract a 3-digit sequence first
+    const threeDigitMatch = fullTranscript.match(/\b(\d{3})\b/);
+    if (threeDigitMatch) {
+      coordinates = threeDigitMatch[1].split('').map(Number);
     } else {
+      // Process individual digits and number words
       const numberWords: Record<string, number> = {
-        'one': 1, 'two': 2, 'three': 3, 'four': 4,
+        'zero': 0, 'one': 1, 'two': 2, 'three': 3, 'four': 4,
+        'five': 5, 'six': 6, 'seven': 7, 'eight': 8, 'nine': 9,
         'won': 1, 'too': 2, 'to': 2, 'for': 4, 'fore': 4
       };
       
-      coordinates = fullTranscript
-        .split(/\s+/)
-        .map(word => {
-          const parsed = parseInt(word, 10);
-          if (!isNaN(parsed)) return parsed;
-          return numberWords[word.toLowerCase()] || NaN;
-        })
-        .filter(num => !isNaN(num))
-        .slice(0, 3);
+      // First, try to extract individual digits
+      const digitMatches = fullTranscript.match(/\b\d\b/g);
+      if (digitMatches && digitMatches.length >= 3) {
+        coordinates = digitMatches.slice(0, 3).map(Number);
+      } else {
+        // Try spoken words and digits combined
+        coordinates = fullTranscript
+          .split(/\s+/)
+          .map(word => {
+            const parsed = parseInt(word, 10);
+            if (!isNaN(parsed) && parsed >= 0 && parsed <= 9) return parsed;
+            return numberWords[word.toLowerCase()] || NaN;
+          })
+          .filter(num => !isNaN(num))
+          .slice(0, 3);
+      }
     }
 
     if (coordinates.length === 3) {
