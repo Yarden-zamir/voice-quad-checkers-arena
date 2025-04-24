@@ -3,6 +3,7 @@ import { useState, useCallback } from 'react';
 import GameBoard from '../components/GameBoard';
 import VoiceController from '../components/VoiceController';
 import { useToast } from "@/components/ui/use-toast";
+import { playErrorSound } from '../utils/audio';
 
 const Index = () => {
   const { toast } = useToast();
@@ -17,10 +18,10 @@ const Index = () => {
   ]);
 
   const handleCellClick = useCallback((x: number, y: number, z: number) => {
-    // Use the same logic as handleCoordinates, but for direct clicks
     setMarkers(prev => {
       // Ensure we have a valid position to modify
       if (!prev[x] || !prev[x][y] || prev[x][y][z] === undefined) {
+        playErrorSound();
         toast({
           title: "Invalid position",
           description: `Coordinates (${x+1}, ${y+1}, ${z+1}) are out of bounds`,
@@ -30,6 +31,7 @@ const Index = () => {
 
       // Check if position is already taken
       if (prev[x][y][z] !== 0) {
+        playErrorSound();
         toast({
           title: "Position already taken",
           description: "Please choose another position",
