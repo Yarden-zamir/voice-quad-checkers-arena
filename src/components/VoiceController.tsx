@@ -146,7 +146,7 @@ const VoiceController: React.FC<VoiceControllerProps> = ({
   }, [isListening, onCoordinatesReceived]);
 
   return (
-    <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-10 flex flex-col items-center gap-2">
+    <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-10 flex flex-col items-center gap-4">
       {transcript && (
         <div className="bg-white px-4 py-2 rounded shadow mb-2">
           <p>You said: <strong>{transcript}</strong></p>
@@ -162,18 +162,18 @@ const VoiceController: React.FC<VoiceControllerProps> = ({
       <Button 
         onClick={onStartListening}
         disabled={isListening}
-        className={`px-8 py-4 text-lg flex gap-2 items-center ${
+        className={`px-12 py-8 text-2xl flex gap-3 items-center ${
           isListening ? 'bg-red-500' : 'bg-primary hover:bg-primary/90'
         }`}
       >
         {isListening ? (
           <>
-            <Loader className="animate-spin h-5 w-5" />
+            <Loader className="animate-spin h-8 w-8" />
             Listening...
           </>
         ) : (
           <>
-            <Mic className="h-5 w-5" />
+            <Mic className="h-8 w-8" />
             Speak Coordinates
           </>
         )}
