@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Mic } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
 
 interface VoiceControllerProps {
@@ -55,9 +55,17 @@ const VoiceController: React.FC<VoiceControllerProps> = ({
         onPointerDown={handlePointerDown}
         onPointerUp={handlePointerUp}
         onPointerLeave={handlePointerUp}
-        className={`px-12 py-8 text-2xl flex gap-3 items-center ${
-          isListening ? 'bg-red-500' : 'bg-primary hover:bg-primary/90'
-        }`}
+        className={`
+          rounded-full 
+          px-12 
+          py-12 
+          text-2xl 
+          flex 
+          gap-3 
+          items-center 
+          select-none 
+          ${isListening ? 'bg-red-500' : 'bg-primary hover:bg-primary/90'}
+        `}
       >
         <Mic className="h-8 w-8" />
         {isListening ? 'Listening...' : 'Hold to Speak'}
