@@ -82,6 +82,12 @@ const VoiceController: React.FC<VoiceControllerProps> = ({
         }
       };
 
+      recognition.onend = () => {
+        if (isListening) {
+          onCoordinatesReceived([]);
+        }
+      };
+
       recognition.start();
     } catch (error) {
       console.error('Speech recognition is not supported:', error);
