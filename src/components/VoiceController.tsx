@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
 import { Mic, Loader } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -17,11 +17,10 @@ const VoiceController: React.FC<VoiceControllerProps> = ({
 }) => {
   const [transcript, setTranscript] = useState('');
   const [recognitionError, setRecognitionError] = useState('');
+  const [retryCount, setRetryCount] = useState(0);
   const { toast } = useToast();
-
-  useEffect(() => {
-    if (!isListening) return;
-
+  
+  const startRecognition = useCallback(() => {
     let recognition: SpeechRecognition | undefined;
     let listenTimeout: number | undefined;
     
@@ -31,46 +30,16 @@ const VoiceController: React.FC<VoiceControllerProps> = ({
       if (!SpeechRecognitionAPI) {
         console.error("Speech recognition not supported in this browser");
         setRecognitionError("Speech recognition not supported in your browser");
-        return;
+        return { recognition, listenTimeout };
       }
       
       recognition = new SpeechRecognitionAPI();
-      recognition.continuous = true; // Changed to true to continue listening
-      recognition.interimResults = true; // Get interim results
+      recognition.continuous = true;
+      recognition.interimResults = true;
       recognition.lang = 'en-US';
 
-      recognition.onresult = (event: SpeechRecognitionEvent) => {
-        const currentTranscript = Array.from(event.results)
-          .map(result => result[0].transcript)
-          .join(' ')
-          .trim();
-          
-        setTranscript(currentTranscript);
-        
-        // Only process when we have a final result
-        const mostRecentResult = event.results[event.results.length - 1];
-        if (mostRecentResult.isFinal) {
-          const hasThreeDigits = /\b\d{3}\b/.test(currentTranscript) || 
-                                 countNumberWords(currentTranscript) >= 3;
-                                 
-          if (hasThreeDigits) {
-            // Stop listening once we have what looks like three digits
-            if (recognition) {
-              recognition.stop();
-              clearTimeout(listenTimeout);
-              processTranscript(currentTranscript);
-              onStartListening(); // Reset listening state
-            }
-          }
-        }
-      };
-
-      recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
-        console.error("Speech recognition error:", event.error);
-        setRecognitionError(`Error: ${event.error}`);
-      };
-
       recognition.start();
+      setRecognitionError('');
       
       // Set a maximum listening time of 5 seconds
       listenTimeout = window.setTimeout(() => {
@@ -89,11 +58,104 @@ const VoiceController: React.FC<VoiceControllerProps> = ({
             });
           }
         }
-      }, 5000); // Increased to 5 seconds from 2 seconds
-
+      }, 5000);
+      
+      return { recognition, listenTimeout };
     } catch (error) {
       console.error('Speech recognition is not supported:', error);
       setRecognitionError('Speech recognition is not supported in your browser');
+      return { recognition: undefined, listenTimeout: undefined };
+    }
+  }, [transcript, onStartListening, toast]);
+
+  useEffect(() => {
+    if (!isListening) {
+      setRetryCount(0);
+      return;
+    }
+
+    let { recognition, listenTimeout } = startRecognition();
+    
+    if (recognition) {
+      recognition.onresult = (event: SpeechRecognitionEvent) => {
+        const currentTranscript = Array.from(event.results)
+          .map(result => result[0].transcript)
+          .join(' ')
+          .trim();
+          
+        setTranscript(currentTranscript);
+        
+        // Only process when we have a final result
+        const mostRecentResult = event.results[event.results.length - 1];
+        if (mostRecentResult.isFinal) {
+          const hasThreeDigits = /\b\d{3}\b/.test(currentTranscript) || 
+                                countNumberWords(currentTranscript) >= 3;
+                                
+          if (hasThreeDigits) {
+            // Stop listening once we have what looks like three digits
+            if (recognition) {
+              recognition.stop();
+              clearTimeout(listenTimeout);
+              processTranscript(currentTranscript);
+              onStartListening(); // Reset listening state
+            }
+          }
+        }
+      };
+
+      recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+        console.error("Speech recognition error:", event.error);
+        
+        if (event.error === 'aborted' && retryCount < 2) {
+          // Auto-retry up to 2 times on aborted errors
+          setRetryCount(prev => prev + 1);
+          
+          if (listenTimeout) {
+            clearTimeout(listenTimeout);
+          }
+          
+          // Small delay before retrying
+          setTimeout(() => {
+            if (isListening) {
+              const newSession = startRecognition();
+              recognition = newSession.recognition;
+              listenTimeout = newSession.listenTimeout;
+              
+              toast({
+                title: "Reconnecting...",
+                description: "Please continue speaking"
+              });
+            }
+          }, 300);
+        } else {
+          setRecognitionError(`Error: ${event.error}`);
+          if (event.error === 'aborted') {
+            toast({
+              title: "Voice recognition interrupted",
+              description: "Please try again",
+              variant: "destructive"
+            });
+            onStartListening(); // Reset listening state
+          }
+        }
+      };
+
+      recognition.onend = () => {
+        // Only handle natural endings here
+        // Aborted ones are handled in onerror
+        if (isListening && !transcript && retryCount < 2) {
+          setRetryCount(prev => prev + 1);
+          
+          // Small delay before retrying
+          setTimeout(() => {
+            if (isListening) {
+              const newSession = startRecognition();
+              recognition = newSession.recognition;
+              listenTimeout = newSession.listenTimeout;
+            }
+          }, 300);
+        }
+      };
     }
 
     return () => {
@@ -104,7 +166,7 @@ const VoiceController: React.FC<VoiceControllerProps> = ({
         clearTimeout(listenTimeout);
       }
     };
-  }, [isListening, onStartListening, toast, transcript]);
+  }, [isListening, onStartListening, startRecognition, retryCount, transcript]);
 
   // Helper function to count number words in a string
   const countNumberWords = (text: string): number => {
@@ -197,7 +259,7 @@ const VoiceController: React.FC<VoiceControllerProps> = ({
         {isListening ? (
           <>
             <Loader className="animate-spin h-8 w-8" />
-            Listening...
+            Listening{retryCount > 0 ? ` (retry ${retryCount})` : '...'}
           </>
         ) : (
           <>
