@@ -53,6 +53,8 @@ const Index = () => {
   }, [currentPlayer, toast]);
 
   const handleCoordinates = useCallback((coordinates: number[]) => {
+    console.log("Handling coordinates:", coordinates);
+    
     // Make sure we have all three coordinates
     if (!coordinates || coordinates.length !== 3) {
       console.log("Invalid coordinates received", coordinates);
@@ -67,7 +69,10 @@ const Index = () => {
     }
 
     // Adjust coordinates to be 0-based and within bounds
-    const [x, y, z] = coordinates.map(coord => Math.min(Math.max(coord, 1), 4) - 1);
+    const adjustedCoords = coordinates.map(coord => Math.min(Math.max(coord, 1), 4) - 1);
+    const [x, y, z] = adjustedCoords;
+    
+    console.log("Adjusted coordinates:", x, y, z);
     
     // Check if coordinates are valid
     if (x === undefined || y === undefined || z === undefined) {
@@ -83,7 +88,7 @@ const Index = () => {
     // Use the cell click handler for consistency
     handleCellClick(x, y, z);
     setIsListening(false);
-  }, [handleCellClick]);
+  }, [handleCellClick, toast]);
 
   return (
     <div className="relative">

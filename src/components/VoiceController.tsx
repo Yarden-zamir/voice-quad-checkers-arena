@@ -84,13 +84,27 @@ const VoiceController: React.FC<VoiceControllerProps> = ({
         setTranscript(fullTranscript);
         console.log("Raw transcript:", fullTranscript);
         
-        const words = fullTranscript.split(' ').map(Number).filter(num => !isNaN(num));
+        // Extract numbers from the transcript
+        const words = fullTranscript.split(/\s+/).map(word => {
+          // Convert word numbers to digits
+          const numberWords: Record<string, number> = {
+            'one': 1, 'two': 2, 'three': 3, 'four': 4,
+            'won': 1, 'too': 2, 'to': 2, 'for': 4, 'fore': 4
+          };
+          
+          // Try to parse the word as a number or map it if it's a word number
+          const parsed = parseInt(word, 10);
+          if (!isNaN(parsed)) return parsed;
+          return numberWords[word.toLowerCase()] || NaN;
+        }).filter(num => !isNaN(num));
 
+        console.log("Extracted coordinates:", words);
+        
         if (words.length === 3) {
-          console.log("Coordinates received:", words);
+          console.log("Valid coordinates received:", words);
           onCoordinatesReceived(words);
         } else {
-          console.log('Please say three numbers for coordinates. Received:', fullTranscript);
+          console.log('Please say three numbers for coordinates. Received:', words);
         }
       };
 
@@ -101,9 +115,7 @@ const VoiceController: React.FC<VoiceControllerProps> = ({
 
       recognition.onend = () => {
         console.log("Speech recognition ended");
-        if (isListening) {
-          onCoordinatesReceived([]);
-        }
+        // Don't automatically call onCoordinatesReceived with empty array
       };
 
       recognition.start();
