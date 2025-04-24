@@ -1,9 +1,15 @@
 
 import { useRef } from 'react';
 import { Mesh } from 'three';
+import { meshStandardMaterial } from 'three/examples/jsm/nodes/Nodes.js';
 
-const Board = ({ markers, currentPlayer }) => {
-  const boardRef = useRef<Mesh>();
+interface BoardProps {
+  markers: number[][][];
+  currentPlayer: number;
+}
+
+const Board: React.FC<BoardProps> = ({ markers, currentPlayer }) => {
+  const boardRef = useRef<Mesh>(null);
 
   const renderCube = (x: number, y: number, z: number, player: number) => {
     const color = player === 1 ? '#D946EF' : '#0EA5E9';

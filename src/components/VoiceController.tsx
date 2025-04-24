@@ -2,6 +2,50 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 
+// Add TypeScript interfaces for the Web Speech API
+interface SpeechRecognitionEvent extends Event {
+  results: SpeechRecognitionResultList;
+}
+
+interface SpeechRecognitionResultList {
+  readonly length: number;
+  [index: number]: SpeechRecognitionResult;
+  item(index: number): SpeechRecognitionResult;
+}
+
+interface SpeechRecognitionResult {
+  readonly length: number;
+  [index: number]: SpeechRecognitionAlternative;
+  item(index: number): SpeechRecognitionAlternative;
+  isFinal: boolean;
+}
+
+interface SpeechRecognitionAlternative {
+  transcript: string;
+  confidence: number;
+}
+
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean;
+  lang: string;
+  interimResults: boolean;
+  maxAlternatives: number;
+  start(): void;
+  stop(): void;
+  abort(): void;
+  onresult: (event: SpeechRecognitionEvent) => void;
+  onerror: (event: Event) => void;
+  onend: (event: Event) => void;
+}
+
+// Add global interfaces
+declare global {
+  interface Window {
+    SpeechRecognition: new () => SpeechRecognition;
+    webkitSpeechRecognition: new () => SpeechRecognition;
+  }
+}
+
 interface VoiceControllerProps {
   onCoordinatesReceived: (coordinates: number[]) => void;
   isListening: boolean;
@@ -19,11 +63,12 @@ const VoiceController: React.FC<VoiceControllerProps> = ({
     let recognition: SpeechRecognition;
     
     try {
-      recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognition = new SpeechRecognitionAPI();
       recognition.continuous = false;
       recognition.lang = 'en-US';
 
-      recognition.onresult = (event) => {
+      recognition.onresult = (event: SpeechRecognitionEvent) => {
         const words = event.results[0][0].transcript
           .trim()
           .split(' ')
