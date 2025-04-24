@@ -40,11 +40,13 @@ const VoiceController: React.FC<VoiceControllerProps> = ({
   });
 
   const handlePointerDown = () => {
+    console.log("Starting listening");
     setIsListening(true);
     startListening();
   };
 
   const handlePointerUp = () => {
+    console.log("Stopping listening");
     setIsListening(false);
     stopListening();
   };
