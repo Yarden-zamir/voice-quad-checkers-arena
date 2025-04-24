@@ -1,50 +1,8 @@
+
 import React, { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Mic, Loader, WifiOff } from "lucide-react";
-import { useOfflineSpeechRecognition } from '../hooks/useOfflineSpeechRecognition';
+import { Mic, Loader } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-
-interface SpeechRecognitionEvent extends Event {
-  results: SpeechRecognitionResultList;
-}
-
-interface SpeechRecognitionResultList {
-  readonly length: number;
-  [index: number]: SpeechRecognitionResult;
-  item(index: number): SpeechRecognitionResult;
-}
-
-interface SpeechRecognitionResult {
-  readonly length: number;
-  [index: number]: SpeechRecognitionAlternative;
-  item(index: number): SpeechRecognitionAlternative;
-  isFinal: boolean;
-}
-
-interface SpeechRecognitionAlternative {
-  transcript: string;
-  confidence: number;
-}
-
-interface SpeechRecognition extends EventTarget {
-  continuous: boolean;
-  lang: string;
-  interimResults: boolean;
-  maxAlternatives: number;
-  start(): void;
-  stop(): void;
-  abort(): void;
-  onresult: (event: SpeechRecognitionEvent) => void;
-  onerror: (event: Event) => void;
-  onend: (event: Event) => void;
-}
-
-declare global {
-  interface Window {
-    SpeechRecognition: new () => SpeechRecognition;
-    webkitSpeechRecognition: new () => SpeechRecognition;
-  }
-}
 
 interface VoiceControllerProps {
   onCoordinatesReceived: (coordinates: number[]) => void;
@@ -59,22 +17,10 @@ const VoiceController: React.FC<VoiceControllerProps> = ({
 }) => {
   const [transcript, setTranscript] = useState('');
   const [recognitionError, setRecognitionError] = useState('');
-  const [isOfflineMode, setIsOfflineMode] = useState(false);
-  const { startListening: startOfflineListening, stopListening: stopOfflineListening, isModelLoading } = useOfflineSpeechRecognition();
   const { toast } = useToast();
 
   useEffect(() => {
     if (!isListening) return;
-
-    let timeoutId: NodeJS.Timeout;
-
-    if (isOfflineMode) {
-      startOfflineListening((text) => {
-        setTranscript(text);
-        processTranscript(text);
-      });
-      return () => stopOfflineListening();
-    }
 
     let recognition: SpeechRecognition;
     
@@ -94,8 +40,6 @@ const VoiceController: React.FC<VoiceControllerProps> = ({
       recognition.onresult = (event: SpeechRecognitionEvent) => {
         const fullTranscript = event.results[0][0].transcript.trim();
         setTranscript(fullTranscript);
-        console.log("Raw transcript:", fullTranscript);
-        
         processTranscript(fullTranscript);
       };
 
@@ -104,13 +48,8 @@ const VoiceController: React.FC<VoiceControllerProps> = ({
         setRecognitionError(`Error: ${event.error}`);
       };
 
-      recognition.onend = () => {
-        console.log("Speech recognition ended");
-      };
-
       recognition.start();
-      
-      timeoutId = setTimeout(() => {
+      setTimeout(() => {
         if (recognition) {
           recognition.stop();
           onStartListening();  // This will set isListening to false
@@ -123,18 +62,17 @@ const VoiceController: React.FC<VoiceControllerProps> = ({
     }
 
     return () => {
-      clearTimeout(timeoutId);
       if (recognition) {
         recognition.stop();
       }
     };
-  }, [isListening, onCoordinatesReceived, isOfflineMode]);
+  }, [isListening, onStartListening]);
 
   const processTranscript = (fullTranscript: string) => {
     console.log("Raw transcript:", fullTranscript);
     
     let coordinates: number[] = [];
-    let processedTranscript = fullTranscript.split(' ')[0]; // Only take the first word/number
+    let processedTranscript = fullTranscript.split(' ')[0];
     
     if (/^\d+/.test(processedTranscript)) {
       const firstThreeDigits = processedTranscript.match(/\d+/g)?.slice(0, 3).join('');
@@ -142,13 +80,13 @@ const VoiceController: React.FC<VoiceControllerProps> = ({
         coordinates = firstThreeDigits.split('').map(Number);
       }
     } else {
-      const words = processedTranscript.split(/\s+/);
       const numberWords: Record<string, number> = {
         'one': 1, 'two': 2, 'three': 3, 'four': 4,
         'won': 1, 'too': 2, 'to': 2, 'for': 4, 'fore': 4
       };
       
-      coordinates = words
+      coordinates = fullTranscript
+        .split(/\s+/)
         .map(word => {
           const parsed = parseInt(word, 10);
           if (!isNaN(parsed)) return parsed;
@@ -177,15 +115,6 @@ const VoiceController: React.FC<VoiceControllerProps> = ({
 
   return (
     <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-10 flex flex-col items-center gap-4">
-      <Button
-        onClick={() => setIsOfflineMode(prev => !prev)}
-        variant="outline"
-        className="mb-2"
-      >
-        <WifiOff className={`mr-2 ${isOfflineMode ? 'text-red-500' : ''}`} />
-        {isOfflineMode ? 'Offline Mode' : 'Online Mode'}
-      </Button>
-
       {transcript && (
         <div className="bg-white px-4 py-2 rounded shadow mb-2">
           <p>You said: <strong>{transcript}</strong></p>
@@ -200,15 +129,15 @@ const VoiceController: React.FC<VoiceControllerProps> = ({
       
       <Button 
         onClick={onStartListening}
-        disabled={isListening || isModelLoading}
+        disabled={isListening}
         className={`px-12 py-8 text-2xl flex gap-3 items-center ${
           isListening ? 'bg-red-500' : 'bg-primary hover:bg-primary/90'
         }`}
       >
-        {isListening || isModelLoading ? (
+        {isListening ? (
           <>
             <Loader className="animate-spin h-8 w-8" />
-            {isModelLoading ? 'Loading Model...' : 'Listening...'}
+            Listening...
           </>
         ) : (
           <>
