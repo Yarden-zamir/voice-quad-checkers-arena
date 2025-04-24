@@ -1,84 +1,60 @@
 
-import { useState, useEffect, useCallback } from 'react';
-import * as speechCommands from '@tensorflow-models/speech-commands';
-import { useToast } from "@/components/ui/use-toast";
-
-// Define the interface for the speech command result
-interface SpeechCommandResult {
-  scores: Float32Array;
-}
+import { useState, useCallback } from 'react';
+import { pipeline } from "@huggingface/transformers";
+import { useToast } from "@/hooks/use-toast";
 
 export const useOfflineSpeechRecognition = () => {
-  const [model, setModel] = useState<speechCommands.SpeechCommandRecognizer | null>(null);
   const [isModelLoading, setIsModelLoading] = useState(false);
   const { toast } = useToast();
-
-  useEffect(() => {
-    const loadModel = async () => {
-      try {
-        setIsModelLoading(true);
-        const recognizer = speechCommands.create('BROWSER_FFT');
-        await recognizer.ensureModelLoaded();
-        setModel(recognizer);
-      } catch (error) {
-        console.error('Failed to load offline speech model:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load offline speech recognition model",
-          variant: "destructive"
-        });
-      } finally {
-        setIsModelLoading(false);
-      }
-    };
-
-    loadModel();
-
-    return () => {
-      if (model) {
-        model.stopListening();
-      }
-    };
-  }, []);
-
-  const startListening = useCallback(async (onResult: (words: string) => void) => {
-    if (!model) return;
-
+  
+  const startListening = useCallback(async (onResult: (text: string) => void) => {
     try {
-      await model.listen(
-        async (result: SpeechCommandResult) => {
-          // Convert the Float32Array to a regular array
-          const scores = Array.from(result.scores);
-          const maxScore = Math.max(...scores);
-          const maxIndex = scores.indexOf(maxScore);
-          const word = model.wordLabels()[maxIndex];
-          onResult(word);
-          return Promise.resolve(); // Return Promise<void> to match RecognizerCallback
-        },
-        {
-          includeSpectrogram: true,
-          probabilityThreshold: 0.75
-        }
+      setIsModelLoading(true);
+      
+      const transcriber = await pipeline(
+        "automatic-speech-recognition",
+        "onnx-community/whisper-tiny.en",
+        { device: "webgpu" }
       );
+      
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      const audioChunks: BlobPart[] = [];
+      
+      mediaRecorder.ondataavailable = (event) => {
+        audioChunks.push(event.data);
+      };
+      
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+        const result = await transcriber(audioBlob);
+        if (result.text) {
+          onResult(result.text);
+        }
+      };
+      
+      mediaRecorder.start();
+      setTimeout(() => mediaRecorder.stop(), 2000);
+      
     } catch (error) {
-      console.error('Error starting offline recognition:', error);
+      console.error('Error in offline speech recognition:', error);
       toast({
         title: "Error",
         description: "Failed to start offline speech recognition",
         variant: "destructive"
       });
+    } finally {
+      setIsModelLoading(false);
     }
-  }, [model]);
+  }, [toast]);
 
   const stopListening = useCallback(() => {
-    if (model) {
-      model.stopListening();
-    }
-  }, [model]);
+    // Cleanup will happen automatically when mediaRecorder.stop() is called
+  }, []);
 
   return {
     startListening,
     stopListening,
-    isModelLoading,
+    isModelLoading
   };
 };

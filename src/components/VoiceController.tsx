@@ -69,17 +69,11 @@ const VoiceController: React.FC<VoiceControllerProps> = ({
     let timeoutId: NodeJS.Timeout;
 
     if (isOfflineMode) {
-      startOfflineListening((word) => {
-        setTranscript(prev => `${prev} ${word}`.trim());
+      startOfflineListening((text) => {
+        setTranscript(text);
+        processTranscript(text);
       });
-      timeoutId = setTimeout(() => {
-        stopOfflineListening();
-        onStartListening();  // This will set isListening to false
-      }, 2000);
-      return () => {
-        clearTimeout(timeoutId);
-        stopOfflineListening();
-      };
+      return () => stopOfflineListening();
     }
 
     let recognition: SpeechRecognition;
@@ -102,48 +96,7 @@ const VoiceController: React.FC<VoiceControllerProps> = ({
         setTranscript(fullTranscript);
         console.log("Raw transcript:", fullTranscript);
         
-        let coordinates: number[] = [];
-        let processedTranscript = fullTranscript;
-        
-        if (/^\d+/.test(processedTranscript)) {
-          const firstThreeDigits = processedTranscript.match(/\d+/g)?.slice(0, 3).join('');
-          if (firstThreeDigits && firstThreeDigits.length === 3) {
-            coordinates = firstThreeDigits.split('').map(Number);
-          }
-        } else {
-          const words = processedTranscript.split(/\s+/);
-          const numberWords: Record<string, number> = {
-            'one': 1, 'two': 2, 'three': 3, 'four': 4,
-            'won': 1, 'too': 2, 'to': 2, 'for': 4, 'fore': 4
-          };
-          
-          coordinates = words
-            .map(word => {
-              const parsed = parseInt(word, 10);
-              if (!isNaN(parsed)) return parsed;
-              return numberWords[word.toLowerCase()] || NaN;
-            })
-            .filter(num => !isNaN(num))
-            .slice(0, 3);
-        }
-
-        console.log("Extracted coordinates:", coordinates);
-        
-        if (coordinates.length === 3) {
-          console.log("Valid coordinates received:", coordinates);
-          onCoordinatesReceived(coordinates);
-          toast({
-            title: "Coordinates Received",
-            description: `Using ${coordinates.join(', ')} [Full transcript: ${fullTranscript}]`
-          });
-        } else {
-          console.log('Please say three numbers for coordinates. Received:', coordinates);
-          toast({
-            title: "Invalid Input",
-            description: `Please say three numbers (received ${coordinates.length}). [Full transcript: ${fullTranscript}]`,
-            variant: "destructive"
-          });
-        }
+        processTranscript(fullTranscript);
       };
 
       recognition.onerror = (event: any) => {
@@ -157,7 +110,6 @@ const VoiceController: React.FC<VoiceControllerProps> = ({
 
       recognition.start();
       
-      // Set timeout to stop listening after 2 seconds
       timeoutId = setTimeout(() => {
         if (recognition) {
           recognition.stop();
@@ -177,6 +129,51 @@ const VoiceController: React.FC<VoiceControllerProps> = ({
       }
     };
   }, [isListening, onCoordinatesReceived, isOfflineMode]);
+
+  const processTranscript = (fullTranscript: string) => {
+    console.log("Raw transcript:", fullTranscript);
+    
+    let coordinates: number[] = [];
+    let processedTranscript = fullTranscript.split(' ')[0]; // Only take the first word/number
+    
+    if (/^\d+/.test(processedTranscript)) {
+      const firstThreeDigits = processedTranscript.match(/\d+/g)?.slice(0, 3).join('');
+      if (firstThreeDigits && firstThreeDigits.length === 3) {
+        coordinates = firstThreeDigits.split('').map(Number);
+      }
+    } else {
+      const words = processedTranscript.split(/\s+/);
+      const numberWords: Record<string, number> = {
+        'one': 1, 'two': 2, 'three': 3, 'four': 4,
+        'won': 1, 'too': 2, 'to': 2, 'for': 4, 'fore': 4
+      };
+      
+      coordinates = words
+        .map(word => {
+          const parsed = parseInt(word, 10);
+          if (!isNaN(parsed)) return parsed;
+          return numberWords[word.toLowerCase()] || NaN;
+        })
+        .filter(num => !isNaN(num))
+        .slice(0, 3);
+    }
+
+    if (coordinates.length === 3) {
+      console.log("Valid coordinates received:", coordinates);
+      onCoordinatesReceived(coordinates);
+      toast({
+        title: "Coordinates Received",
+        description: `Using ${coordinates.join(', ')} [Full transcript: ${fullTranscript}]`
+      });
+    } else {
+      console.log('Please say three numbers for coordinates. Received:', coordinates);
+      toast({
+        title: "Invalid Input",
+        description: `Please say three numbers (received ${coordinates.length}). [Full transcript: ${fullTranscript}]`,
+        variant: "destructive"
+      });
+    }
+  };
 
   return (
     <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-10 flex flex-col items-center gap-4">
