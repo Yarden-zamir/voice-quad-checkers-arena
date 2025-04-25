@@ -33,8 +33,8 @@ const VoiceInputFab: React.FC<VoiceInputFabProps> = ({ onCoordinatesReceived }) 
 
       recognition.current.onstart = () => {
         toast({
-          title: "Debug",
-          description: "Speech recognition started",
+          title: "Voice Input Active",
+          description: "Listening for coordinates...",
           duration: 1000,
           className: "toast-with-progress",
         });
@@ -44,8 +44,8 @@ const VoiceInputFab: React.FC<VoiceInputFabProps> = ({ onCoordinatesReceived }) 
         const text = event.results[0][0].transcript.toLowerCase();
         console.log("Recognized text:", text);
         toast({
-          title: "Debug",
-          description: `Raw text: "${text}"`,
+          title: "You said",
+          description: `"${text}"`,
           duration: 1500,
           className: "toast-with-progress",
         });
