@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useTileSize } from '@/contexts/TileSizeContext';
 
 interface BoardProps {
   markers: number[][][];
@@ -10,6 +11,8 @@ interface BoardProps {
 }
 
 const Board: React.FC<BoardProps> = ({ markers, currentPlayer, onCellClick, hideHistory, lastMove }) => {
+  const { tileSize } = useTileSize();
+  
   const renderCell = (x: number, y: number, z: number) => {
     const value = markers && markers[x] && markers[x][y] ? markers[x][y][z] : 0;
     const isLastMove = lastMove && lastMove.x === x && lastMove.y === y && lastMove.z === z;
@@ -29,6 +32,7 @@ const Board: React.FC<BoardProps> = ({ markers, currentPlayer, onCellClick, hide
         key={`cell-${x}-${y}-${z}`}
         className={`${color} aspect-square flex items-center justify-center border border-gray-400 cursor-pointer hover:opacity-80 transition-opacity text-xs`}
         onClick={() => onCellClick(x, y, z)}
+        style={{ transform: `scale(${tileSize})` }}
       >
         {!shouldHideCell && value !== 0 && (
           <span className="text-white font-bold text-xs">
