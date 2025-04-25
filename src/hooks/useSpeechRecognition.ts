@@ -28,7 +28,8 @@ export const useSpeechRecognition = ({ onResult, onError, onListeningChange }: S
       // Initialize the Whisper model using @huggingface/transformers
       whisperRef.current = await pipeline(
         "automatic-speech-recognition",
-        "onnx-community/whisper-tiny.en"
+        "openai/whisper-tiny.en",
+        { revision: "main" }
       );
       
       setIsInitialized(true);
@@ -48,6 +49,7 @@ export const useSpeechRecognition = ({ onResult, onError, onListeningChange }: S
       // Make sure model is initialized
       if (!isInitialized && !isInitializing) {
         await initializeWhisper();
+        return; // Wait for model to initialize before starting recording
       }
       
       // Stop any existing recording session first
@@ -58,19 +60,26 @@ export const useSpeechRecognition = ({ onResult, onError, onListeningChange }: S
       console.log("Starting audio recording...");
       audioChunksRef.current = [];
       
-      // Request microphone access
+      // Request microphone access with optimal settings for speech recognition
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
-          sampleRate: 16000,
-          channelCount: 1,
+          sampleRate: 16000, // Whisper works best with 16kHz audio
+          channelCount: 1,   // Mono audio
           echoCancellation: true,
-          noiseSuppression: true
+          noiseSuppression: true,
+          autoGainControl: true
         } 
       });
       
+      // Determine supported MIME type
+      let mimeType = 'audio/webm';
+      if (!MediaRecorder.isTypeSupported('audio/webm')) {
+        mimeType = 'audio/ogg';
+      }
+      
       // Create media recorder with optimized settings
       const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/ogg',
+        mimeType: mimeType,
         audioBitsPerSecond: 128000
       });
       mediaRecorderRef.current = mediaRecorder;
@@ -79,6 +88,7 @@ export const useSpeechRecognition = ({ onResult, onError, onListeningChange }: S
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
           audioChunksRef.current.push(event.data);
+          console.log(`Audio chunk received: ${event.data.size} bytes`);
         }
       };
       
@@ -112,7 +122,10 @@ export const useSpeechRecognition = ({ onResult, onError, onListeningChange }: S
             );
             
             console.log("Transcribing with Whisper...");
-            const result = await whisperRef.current(audioFile);
+            const result = await whisperRef.current(audioFile, { 
+              chunk_length_s: 30,
+              stride_length_s: 5
+            });
             console.log("Whisper result:", result);
             
             if (result && result.text && result.text.trim() !== "") {
@@ -133,7 +146,7 @@ export const useSpeechRecognition = ({ onResult, onError, onListeningChange }: S
       };
       
       // Start recording with a timeslice to collect data more frequently
-      mediaRecorder.start(100);
+      mediaRecorder.start(200); // Collect data every 200ms
       if (onListeningChange) onListeningChange(true);
       console.log("Recording started");
       
