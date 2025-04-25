@@ -1,5 +1,4 @@
-
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import GameBoard from '../components/GameBoard';
 import { useToast } from "@/components/ui/use-toast";
 import { playErrorSound } from '../utils/audio';
@@ -19,6 +18,14 @@ const Index = () => {
   
   // Use a ref to prevent state updates during render
   const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  
+  // Use a ref to track the current player to avoid closure issues
+  const currentPlayerRef = useRef(currentPlayer);
+  
+  // Keep the ref in sync with the state
+  useEffect(() => {
+    currentPlayerRef.current = currentPlayer;
+  }, [currentPlayer]);
 
   const handleCellClick = useCallback((x: number, y: number, z: number) => {
     if (gameOver) {
@@ -33,6 +40,9 @@ const Index = () => {
       }, 0);
       return;
     }
+
+    // Get the current player from the ref to avoid stale closure issues
+    const player = currentPlayerRef.current;
 
     setMarkers(prev => {
       if (!prev[x] || !prev[x][y] || prev[x][y][z] === undefined) {
@@ -64,20 +74,20 @@ const Index = () => {
       }
 
       const newMarkers = JSON.parse(JSON.stringify(prev));
-      newMarkers[x][y][z] = currentPlayer;
+      newMarkers[x][y][z] = player;
       
       setLastMove({ x, y, z });
       
-      // Switch player BEFORE checking win condition
-      const nextPlayer = currentPlayer === 1 ? 2 : 1;
+      // Switch player after valid move
+      const nextPlayer = player === 1 ? 2 : 1;
       
-      if (checkWin(newMarkers, currentPlayer)) {
+      if (checkWin(newMarkers, player)) {
         setGameOver(true);
         if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
         toastTimeoutRef.current = setTimeout(() => {
           toast({
             title: "Game Over!",
-            description: `Player ${currentPlayer} wins!`,
+            description: `Player ${player} wins!`,
             duration: 800,
             className: "toast-with-progress",
           });
@@ -87,21 +97,21 @@ const Index = () => {
         toastTimeoutRef.current = setTimeout(() => {
           toast({
             title: "Move placed",
-            description: `Player ${currentPlayer} placed at position (${x+1}, ${y+1}, ${z+1})`,
+            description: `Player ${player} placed at position (${x+1}, ${y+1}, ${z+1})`,
             duration: 800,
             className: "toast-with-progress",
           });
         }, 0);
+        
+        // Only switch player if game is not over
+        setTimeout(() => {
+          setCurrentPlayer(nextPlayer);
+        }, 0);
       }
-
-      // After the state update, actually change the player
-      setTimeout(() => {
-        setCurrentPlayer(nextPlayer);
-      }, 0);
 
       return newMarkers;
     });
-  }, [currentPlayer, gameOver, toast]);
+  }, [gameOver, toast]);
 
   const bgColor = currentPlayer === 1 ? 'bg-purple-500/20' : 'bg-blue-500/20';
 
