@@ -164,10 +164,12 @@ const VoiceInputFab: React.FC<VoiceInputFabProps> = ({
   return (
     <Button
       className={cn(
-        "fixed bottom-8 left-8 rounded-full w-24 h-24 p-0 shadow-lg", 
+        "fixed bottom-8 left-8 rounded-full w-16 h-16 p-0 shadow-lg transition-all duration-300 ease-in-out",
         {
-          "w-[calc(100vw-4rem)] h-[calc(100vh-4rem)] z-50": fullScreen,
-          "animate-pulse": isLoading && !isListening
+          "w-72 h-72": fullScreen,
+          "animate-pulse": isLoading && !isListening,
+          "hover:scale-105": !fullScreen,
+          "hover:scale-102": fullScreen
         }
       )}
       onClick={toggleListening}
@@ -175,9 +177,13 @@ const VoiceInputFab: React.FC<VoiceInputFabProps> = ({
       disabled={isLoading && !isListening}
     >
       {isListening ? (
-        <MicOff className={cn("h-12 w-12", { "h-48 w-48": fullScreen })} />
+        <MicOff className={cn("h-8 w-8 transition-all duration-300", { 
+          "h-32 w-32": fullScreen 
+        })} />
       ) : (
-        <Mic className={cn("h-12 w-12", { "h-48 w-48": fullScreen })} />
+        <Mic className={cn("h-8 w-8 transition-all duration-300", { 
+          "h-32 w-32": fullScreen 
+        })} />
       )}
     </Button>
   );
