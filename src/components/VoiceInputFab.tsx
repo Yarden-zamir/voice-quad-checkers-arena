@@ -15,6 +15,7 @@ const VoiceInputFab: React.FC<VoiceInputFabProps> = ({ onCoordinatesReceived }) 
   const transcriber = useRef<any>(null);
   const mediaRecorder = useRef<MediaRecorder | null>(null);
   const audioChunks = useRef<Blob[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const initializeTranscriber = async () => {
     if (!transcriber.current) {
@@ -38,52 +39,82 @@ const VoiceInputFab: React.FC<VoiceInputFabProps> = ({ onCoordinatesReceived }) 
 
   const startListening = async () => {
     try {
+      setIsLoading(true);
       await initializeTranscriber();
       
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      mediaRecorder.current = new MediaRecorder(stream);
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        } 
+      });
+      
+      mediaRecorder.current = new MediaRecorder(stream, { mimeType: 'audio/webm' });
       audioChunks.current = [];
 
       mediaRecorder.current.ondataavailable = (event) => {
-        audioChunks.current.push(event.data);
+        if (event.data.size > 0) {
+          audioChunks.current.push(event.data);
+        }
       };
 
       mediaRecorder.current.onstop = async () => {
-        const audioBlob = new Blob(audioChunks.current, { type: 'audio/wav' });
         try {
-          const result = await transcriber.current(audioBlob);
-          console.log("Transcription result:", result);
+          const audioBlob = new Blob(audioChunks.current, { type: 'audio/webm' });
+          console.log("Audio blob created:", audioBlob.size, "bytes");
           
-          const text = result.text.toLowerCase();
-          const coordinatesMatch = text.match(/(\d+)\D+(\d+)\D+(\d+)/);
-          
-          if (coordinatesMatch) {
-            const x = parseInt(coordinatesMatch[1]);
-            const y = parseInt(coordinatesMatch[2]);
-            const z = parseInt(coordinatesMatch[3]);
+          if (audioBlob.size > 0) {
+            toast({
+              title: "Processing speech",
+              description: "Please wait while we process your audio...",
+              duration: 2000,
+              className: "toast-with-progress",
+            });
             
-            if (!isNaN(x) && !isNaN(y) && !isNaN(z)) {
-              if (x >= 1 && x <= 4 && y >= 1 && y <= 4 && z >= 1 && z <= 4) {
-                toast({
-                  title: "Coordinates Recognized",
-                  description: `Position: ${x}, ${y}, ${z}`,
-                  duration: 800,
-                  className: "toast-with-progress",
-                });
-                onCoordinatesReceived(x, y, z);
-              } else {
-                toast({
-                  title: "Invalid Coordinates",
-                  description: "Coordinates must be between 1 and 4",
-                  duration: 800,
-                  className: "toast-with-progress",
-                });
+            const result = await transcriber.current(audioBlob);
+            console.log("Transcription result:", result);
+            
+            const text = result.text.toLowerCase();
+            console.log("Transcribed text:", text);
+            
+            const coordinatesMatch = text.match(/(\d+)\D+(\d+)\D+(\d+)/);
+            
+            if (coordinatesMatch) {
+              const x = parseInt(coordinatesMatch[1]);
+              const y = parseInt(coordinatesMatch[2]);
+              const z = parseInt(coordinatesMatch[3]);
+              
+              if (!isNaN(x) && !isNaN(y) && !isNaN(z)) {
+                if (x >= 1 && x <= 4 && y >= 1 && y <= 4 && z >= 1 && z <= 4) {
+                  toast({
+                    title: "Coordinates Recognized",
+                    description: `Position: ${x}, ${y}, ${z}`,
+                    duration: 800,
+                    className: "toast-with-progress",
+                  });
+                  onCoordinatesReceived(x, y, z);
+                } else {
+                  toast({
+                    title: "Invalid Coordinates",
+                    description: "Coordinates must be between 1 and 4",
+                    duration: 800,
+                    className: "toast-with-progress",
+                  });
+                }
               }
+            } else {
+              toast({
+                title: "No Coordinates Found",
+                description: "Try saying three numbers, like '2 3 4'",
+                duration: 1000,
+                className: "toast-with-progress",
+              });
             }
           } else {
             toast({
-              title: "No Coordinates Found",
-              description: "Try saying three numbers, like '2 3 4'",
+              title: "No Audio Recorded",
+              description: "Please try again and speak clearly",
               duration: 1000,
               className: "toast-with-progress",
             });
@@ -92,12 +123,13 @@ const VoiceInputFab: React.FC<VoiceInputFabProps> = ({ onCoordinatesReceived }) 
           console.error("Transcription error:", error);
           toast({
             title: "Recognition Error",
-            description: "Failed to process speech",
+            description: "Failed to process speech. Please try again.",
             duration: 3000,
             className: "toast-with-progress",
           });
         }
         setIsListening(false);
+        setIsLoading(false);
       };
 
       mediaRecorder.current.start();
@@ -119,6 +151,7 @@ const VoiceInputFab: React.FC<VoiceInputFabProps> = ({ onCoordinatesReceived }) 
         className: "toast-with-progress",
       });
       setIsListening(false);
+      setIsLoading(false);
     }
   };
 
@@ -140,9 +173,10 @@ const VoiceInputFab: React.FC<VoiceInputFabProps> = ({ onCoordinatesReceived }) 
 
   return (
     <Button
-      className="fixed bottom-4 left-4 rounded-full w-12 h-12 p-0 shadow-lg"
+      className={`fixed bottom-4 left-4 rounded-full w-12 h-12 p-0 shadow-lg ${isLoading ? 'animate-pulse' : ''}`}
       onClick={toggleListening}
       variant="default"
+      disabled={isLoading && !isListening}
     >
       {isListening ? (
         <MicOff className="h-6 w-6" />
