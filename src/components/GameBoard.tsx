@@ -1,7 +1,8 @@
+
 import React, { useState } from 'react';
 import Board from './Board';
 import { Button } from "@/components/ui/button";
-import { Eye, EyeOff, History } from "lucide-react";
+import { Eye, EyeOff, History, RotateCcw } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import VoiceInputFab from './VoiceInputFab';
 
@@ -9,10 +10,17 @@ interface GameBoardProps {
   markers: number[][][];
   currentPlayer: number;
   onCellClick: (x: number, y: number, z: number) => void;
+  onResetGame: () => void;  // New prop for reset game functionality
   lastMove?: { x: number; y: number; z: number } | null;
 }
 
-const GameBoard: React.FC<GameBoardProps> = ({ markers, currentPlayer, onCellClick, lastMove }) => {
+const GameBoard: React.FC<GameBoardProps> = ({ 
+  markers, 
+  currentPlayer, 
+  onCellClick, 
+  onResetGame,  // Added reset game handler
+  lastMove 
+}) => {
   const [isHidden, setIsHidden] = useState(false);
   const [hideHistory, setHideHistory] = useState(false);
 
@@ -42,6 +50,15 @@ const GameBoard: React.FC<GameBoardProps> = ({ markers, currentPlayer, onCellCli
         >
           {isHidden ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
           {isHidden ? 'Show Board' : 'Hide Board'}
+        </Button>
+
+        <Button
+          onClick={onResetGame}
+          variant="secondary"
+          className="shadow-sm"
+        >
+          <RotateCcw className="h-4 w-4 mr-2" />
+          Reset Game
         </Button>
       </div>
       

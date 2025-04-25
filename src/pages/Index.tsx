@@ -132,28 +132,12 @@ const Index = () => {
 
   return (
     <div className={`relative min-h-screen transition-colors duration-300 ${bgColor}`}>
-      <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-10 flex flex-col items-center gap-4">
-        <Button 
-          onClick={resetGame}
-          variant="secondary"
-          className="bg-white/80 backdrop-blur-sm shadow-lg hover:bg-white/90"
-        >
-          <RotateCcw className="mr-2 h-4 w-4" />
-          Reset Game
-        </Button>
-        {gameOver && (
-          <div className="bg-white/10 backdrop-blur-md px-6 py-3 rounded-full">
-            <h1 className="text-2xl font-bold text-white">
-              Player {currentPlayer === 1 ? 2 : 1} Wins!
-            </h1>
-          </div>
-        )}
-      </div>
       <WinCelebration isActive={gameOver} />
       <GameBoard 
         markers={markers}
         currentPlayer={currentPlayer}
         onCellClick={handleCellClick}
+        onResetGame={resetGame}
         lastMove={lastMove}
       />
     </div>
