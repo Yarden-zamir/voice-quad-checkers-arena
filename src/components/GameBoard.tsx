@@ -18,7 +18,10 @@ const GameBoard: React.FC<GameBoardProps> = ({ markers, currentPlayer, onCellCli
   const [hideHistory, setHideHistory] = useState(false);
 
   const handleCoordinatesReceived = (x: number, y: number, z: number) => {
-    onCellClick(x - 1, y - 1, z - 1); // Adjust for 0-based indexing
+    // Process voice input coordinates by converting from 1-based to 0-based indexing
+    // and forwarding to the same click handler that updates the game state
+    console.log(`Voice coordinates received: ${x}, ${y}, ${z}`);
+    onCellClick(x - 1, y - 1, z - 1);
   };
 
   return (

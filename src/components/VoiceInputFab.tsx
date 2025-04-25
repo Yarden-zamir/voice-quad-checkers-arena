@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Mic, MicOff } from "lucide-react";
@@ -29,6 +30,8 @@ const VoiceInputFab: React.FC<VoiceInputFabProps> = ({ onCoordinatesReceived }) 
           description: `Position: ${x}, ${y}, ${z}`,
           duration: 3000,
         });
+        
+        // Call the handler function with the coordinates
         onCoordinatesReceived(x, y, z);
       } else {
         toast({
