@@ -1,3 +1,4 @@
+
 export const playErrorSound = () => {
   const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
   const oscillator = audioContext.createOscillator();
@@ -8,7 +9,7 @@ export const playErrorSound = () => {
 
   oscillator.type = 'sine';
   oscillator.frequency.value = 440; // A4 note
-  gainNode.gain.value = 0.1;
+  gainNode.gain.value = 0.3; // Increased from 0.1 to 0.3
 
   oscillator.start();
   gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.5);
@@ -26,7 +27,7 @@ export const playWinSound = () => {
   const oscillators: OscillatorNode[] = [];
   const gainNode = audioContext.createGain();
   gainNode.connect(audioContext.destination);
-  gainNode.gain.value = 0.1;
+  gainNode.gain.value = 0.3; // Increased from 0.1 to 0.3
 
   // Create a happy chord
   const frequencies = [523.25, 659.25, 783.99]; // C5, E5, G5
