@@ -1,3 +1,4 @@
+
 import * as React from "react"
 import * as ToastPrimitives from "@radix-ui/react-toast"
 import { cva, type VariantProps } from "class-variance-authority"
@@ -39,15 +40,21 @@ const toastVariants = cva(
   }
 )
 
+interface ToastCustomProps {
+  hasProgressBar?: boolean;
+}
+
 const Toast = React.forwardRef<
   React.ElementRef<typeof ToastPrimitives.Root>,
   React.ComponentPropsWithoutRef<typeof ToastPrimitives.Root> &
-    VariantProps<typeof toastVariants>
+    VariantProps<typeof toastVariants> &
+    ToastCustomProps
 >(({ className, variant, ...props }, ref) => {
   const [progress, setProgress] = React.useState(100);
+  const hasProgressBar = props.className?.includes('toast-with-progress');
 
   React.useEffect(() => {
-    if (props.duration && props.className?.includes('toast-with-progress')) {
+    if (props.duration && hasProgressBar) {
       const startTime = Date.now();
       const duration = props.duration;
 
@@ -63,7 +70,7 @@ const Toast = React.forwardRef<
 
       requestAnimationFrame(updateProgress);
     }
-  }, [props.duration, props.className]);
+  }, [props.duration, hasProgressBar]);
 
   return (
     <ToastPrimitives.Root
@@ -72,7 +79,7 @@ const Toast = React.forwardRef<
       {...props}
     >
       {props.children}
-      {props.className?.includes('toast-with-progress') && props.duration && (
+      {hasProgressBar && props.duration && (
         <Progress value={progress} className="mt-2 h-1" />
       )}
     </ToastPrimitives.Root>
