@@ -57,8 +57,8 @@ const Board: React.FC<BoardProps> = ({ markers, currentPlayer, onCellClick, hide
   };
 
   return (
-    <div className="flex flex-wrap justify-center items-center gap-1 max-w-full">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-1 w-full max-w-2xl mx-auto px-2">
+    <div className="flex flex-col justify-center items-center gap-4 max-w-full">
+      <div className="flex flex-col gap-4 w-full max-w-md mx-auto px-2">
         {Array.from({ length: 4 }, (_, index) => renderGrid(index))}
       </div>
       <div className="w-full text-center mt-4">
