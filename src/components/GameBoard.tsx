@@ -17,8 +17,8 @@ const GameBoard: React.FC<GameBoardProps> = ({ markers, currentPlayer, onCellCli
   const [hideHistory, setHideHistory] = useState(false);
 
   return (
-    <div className="py-16 px-4 bg-gray-100 min-h-screen relative">
-      <div className="fixed top-4 right-4 z-20 flex flex-col gap-4">
+    <div className="pt-24 px-4 bg-gray-100 min-h-screen relative">
+      <div className="fixed top-4 left-0 right-0 z-20 flex justify-center gap-4 bg-white/80 backdrop-blur-sm py-4 px-4 shadow-md">
         <div className="flex items-center gap-2 bg-white p-2 rounded-lg shadow">
           <Switch
             id="hide-history"
@@ -33,7 +33,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ markers, currentPlayer, onCellCli
         
         <Button
           onClick={() => setIsHidden(prev => !prev)}
-          className="w-full"
+          className="shadow-sm"
         >
           {isHidden ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
           {isHidden ? 'Show Board' : 'Hide Board'}
