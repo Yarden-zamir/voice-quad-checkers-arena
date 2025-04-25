@@ -18,11 +18,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ markers, currentPlayer, onCellCli
   const [hideHistory, setHideHistory] = useState(false);
 
   const handleCoordinatesReceived = (x: number, y: number, z: number) => {
-    // Process voice input coordinates by converting from 1-based to 0-based indexing
-    // and calling the same onCellClick handler that updates the game state
     console.log(`Voice coordinates received: ${x}, ${y}, ${z}`);
-    
-    // Convert to 0-based indexing and pass to the parent's onCellClick handler
     onCellClick(x - 1, y - 1, z - 1);
   };
 
@@ -65,7 +61,12 @@ const GameBoard: React.FC<GameBoardProps> = ({ markers, currentPlayer, onCellCli
           />
         )}
       </div>
-      <VoiceInputFab onCoordinatesReceived={handleCoordinatesReceived} />
+      
+      {/* Modify VoiceInputFab to be full screen when board is hidden */}
+      <VoiceInputFab 
+        onCoordinatesReceived={handleCoordinatesReceived} 
+        fullScreen={isHidden}
+      />
     </div>
   );
 };

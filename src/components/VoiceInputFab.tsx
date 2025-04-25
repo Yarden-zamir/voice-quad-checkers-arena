@@ -3,12 +3,17 @@ import React, { useState, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Mic, MicOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 interface VoiceInputFabProps {
   onCoordinatesReceived: (x: number, y: number, z: number) => void;
+  fullScreen?: boolean;
 }
 
-const VoiceInputFab: React.FC<VoiceInputFabProps> = ({ onCoordinatesReceived }) => {
+const VoiceInputFab: React.FC<VoiceInputFabProps> = ({ 
+  onCoordinatesReceived, 
+  fullScreen = false 
+}) => {
   const [isListening, setIsListening] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -158,15 +163,21 @@ const VoiceInputFab: React.FC<VoiceInputFabProps> = ({ onCoordinatesReceived }) 
 
   return (
     <Button
-      className={`fixed bottom-8 left-8 rounded-full w-24 h-24 p-0 shadow-lg ${isLoading ? 'animate-pulse' : ''}`}
+      className={cn(
+        "fixed bottom-8 left-8 rounded-full w-24 h-24 p-0 shadow-lg", 
+        {
+          "w-[calc(100vw-4rem)] h-[calc(100vh-4rem)] z-50": fullScreen,
+          "animate-pulse": isLoading && !isListening
+        }
+      )}
       onClick={toggleListening}
       variant="default"
       disabled={isLoading && !isListening}
     >
       {isListening ? (
-        <MicOff className="h-12 w-12" />
+        <MicOff className={cn("h-12 w-12", { "h-48 w-48": fullScreen })} />
       ) : (
-        <Mic className="h-12 w-12" />
+        <Mic className={cn("h-12 w-12", { "h-48 w-48": fullScreen })} />
       )}
     </Button>
   );
