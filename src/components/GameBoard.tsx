@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import Board from './Board';
 import { Button } from "@/components/ui/button";
+import { Toggle } from "@/components/ui/toggle";
 import { Eye, EyeOff, History, RotateCcw } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import VoiceInputFab from './VoiceInputFab';
@@ -18,7 +19,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
   markers, 
   currentPlayer, 
   onCellClick, 
-  onResetGame,  // Added reset game handler
+  onResetGame,
   lastMove 
 }) => {
   const [isHidden, setIsHidden] = useState(false);
@@ -44,13 +45,14 @@ const GameBoard: React.FC<GameBoardProps> = ({
           </label>
         </div>
         
-        <Button
-          onClick={() => setIsHidden(prev => !prev)}
+        <Toggle
+          pressed={isHidden}
+          onPressedChange={setIsHidden}
           className="shadow-sm"
         >
-          {isHidden ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+          {isHidden ? <Eye className="h-4 w-4 mr-2" /> : <EyeOff className="h-4 w-4 mr-2" />}
           {isHidden ? 'Show Board' : 'Hide Board'}
-        </Button>
+        </Toggle>
 
         <Button
           onClick={onResetGame}
