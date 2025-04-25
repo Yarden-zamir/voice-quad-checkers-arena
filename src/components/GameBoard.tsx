@@ -1,9 +1,9 @@
-
 import React, { useState } from 'react';
 import Board from './Board';
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff, History } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import VoiceInputFab from './VoiceInputFab';
 
 interface GameBoardProps {
   markers: number[][][];
@@ -15,6 +15,10 @@ interface GameBoardProps {
 const GameBoard: React.FC<GameBoardProps> = ({ markers, currentPlayer, onCellClick, lastMove }) => {
   const [isHidden, setIsHidden] = useState(false);
   const [hideHistory, setHideHistory] = useState(false);
+
+  const handleCoordinatesReceived = (x: number, y: number, z: number) => {
+    onCellClick(x - 1, y - 1, z - 1); // Adjust for 0-based indexing
+  };
 
   return (
     <div className="pt-24 px-4 bg-gray-100 min-h-screen relative">
@@ -53,6 +57,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ markers, currentPlayer, onCellCli
           lastMove={lastMove}
         />
       )}
+      <VoiceInputFab onCoordinatesReceived={handleCoordinatesReceived} />
     </div>
   );
 };
