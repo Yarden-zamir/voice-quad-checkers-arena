@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import Board from './Board';
-import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
 import { Eye, EyeOff, History, RotateCcw } from "lucide-react";
-import { Switch } from "@/components/ui/switch";
 import VoiceInputFab from './VoiceInputFab';
 
 interface GameBoardProps {
@@ -50,14 +48,14 @@ const GameBoard: React.FC<GameBoardProps> = ({
           {isHidden ? 'Show Board' : 'Hide Board'}
         </Toggle>
 
-        <Button
-          onClick={onResetGame}
-          variant="secondary"
+        <Toggle
+          pressed={false}
+          onPressedChange={() => onResetGame()}
           className="shadow-sm"
         >
           <RotateCcw className="h-4 w-4 mr-2" />
           Reset Game
-        </Button>
+        </Toggle>
       </div>
       
       <div className="pt-4 px-4">
