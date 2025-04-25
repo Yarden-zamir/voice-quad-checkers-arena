@@ -12,8 +12,6 @@ const WinCelebration = ({ isActive }: WinCelebrationProps) => {
     height: window.innerHeight
   });
 
-  const [isConfettiActive, setIsConfettiActive] = useState(false);
-
   useEffect(() => {
     // Update window dimensions when the window is resized
     const handleResize = () => {
@@ -27,25 +25,21 @@ const WinCelebration = ({ isActive }: WinCelebrationProps) => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  useEffect(() => {
-    if (isActive) {
-      setIsConfettiActive(true);
-      const timer = setTimeout(() => {
-        setIsConfettiActive(false);
-      }, 5000); // Run confetti for 5 seconds
-      return () => clearTimeout(timer);
-    }
-  }, [isActive]);
-
   if (!isActive) return null;
 
   return (
     <ReactConfetti
       width={windowSize.width}
       height={windowSize.height}
-      numberOfPieces={500}
+      numberOfPieces={300}
       recycle={false}
-      run={isConfettiActive}
+      run={true}
+      style={{ 
+        position: 'fixed', 
+        top: 0, 
+        left: 0, 
+        zIndex: 50 
+      }}
     />
   );
 };
