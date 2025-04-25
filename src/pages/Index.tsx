@@ -1,8 +1,10 @@
+
 import { useState, useCallback } from 'react';
 import GameBoard from '../components/GameBoard';
 import { useToast } from "@/components/ui/use-toast";
 import { playErrorSound } from '../utils/audio';
 import { checkWin } from '../utils/winConditions';
+import { Progress } from "@/components/ui/progress";
 
 const Index = () => {
   const { toast } = useToast();
@@ -21,6 +23,8 @@ const Index = () => {
       toast({
         title: "Game Over",
         description: "Please start a new game",
+        duration: 800,
+        className: "toast-with-progress",
       });
       return;
     }
@@ -31,6 +35,8 @@ const Index = () => {
         toast({
           title: "Invalid position",
           description: `Coordinates (${x+1}, ${y+1}, ${z+1}) are out of bounds`,
+          duration: 800,
+          className: "toast-with-progress",
         });
         return prev;
       }
@@ -40,6 +46,8 @@ const Index = () => {
         toast({
           title: "Position already taken",
           description: "Please choose another position",
+          duration: 800,
+          className: "toast-with-progress",
         });
         return prev;
       }
@@ -54,11 +62,15 @@ const Index = () => {
         toast({
           title: "Game Over!",
           description: `Player ${currentPlayer} wins!`,
+          duration: 800,
+          className: "toast-with-progress",
         });
       } else {
         toast({
           title: "Move placed",
           description: `Player ${currentPlayer} placed at position (${x+1}, ${y+1}, ${z+1})`,
+          duration: 800,
+          className: "toast-with-progress",
         });
       }
 

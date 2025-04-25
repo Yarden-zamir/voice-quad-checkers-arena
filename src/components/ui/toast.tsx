@@ -4,6 +4,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import { Progress } from "@/components/ui/progress"
 
 const ToastProvider = ToastPrimitives.Provider
 
@@ -43,13 +44,39 @@ const Toast = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof ToastPrimitives.Root> &
     VariantProps<typeof toastVariants>
 >(({ className, variant, ...props }, ref) => {
+  const [progress, setProgress] = React.useState(100);
+
+  React.useEffect(() => {
+    if (props.duration && props.className?.includes('toast-with-progress')) {
+      const startTime = Date.now();
+      const duration = props.duration;
+
+      const updateProgress = () => {
+        const elapsed = Date.now() - startTime;
+        const remaining = Math.max(0, 100 * (1 - elapsed / duration));
+        setProgress(remaining);
+
+        if (remaining > 0) {
+          requestAnimationFrame(updateProgress);
+        }
+      };
+
+      requestAnimationFrame(updateProgress);
+    }
+  }, [props.duration, props.className]);
+
   return (
     <ToastPrimitives.Root
       ref={ref}
       className={cn(toastVariants({ variant }), className)}
       {...props}
-    />
-  )
+    >
+      {props.children}
+      {props.className?.includes('toast-with-progress') && props.duration && (
+        <Progress value={progress} className="mt-2 h-1" />
+      )}
+    </ToastPrimitives.Root>
+  );
 })
 Toast.displayName = ToastPrimitives.Root.displayName
 
