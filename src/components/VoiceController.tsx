@@ -92,14 +92,7 @@ const VoiceController: React.FC<VoiceControllerProps> = ({
 
   const handlePointerDown = () => {
     console.log("Button pressed - starting listening");
-    if (!isModelLoading) {
-      startListening();
-    } else {
-      toast({
-        title: "Model is loading",
-        description: "Please wait for the speech recognition model to load"
-      });
-    }
+    startListening();
   };
 
   const handlePointerUp = () => {
@@ -123,6 +116,7 @@ const VoiceController: React.FC<VoiceControllerProps> = ({
         onPointerDown={handlePointerDown}
         onPointerUp={handlePointerUp}
         onPointerLeave={handlePointerLeave}
+        disabled={isModelLoading}
         className={`
           rounded-full 
           w-20 
@@ -150,6 +144,9 @@ const VoiceController: React.FC<VoiceControllerProps> = ({
           {isModelLoading ? 'Loading...' : isListening ? 'Listening...' : 'Hold to Speak'}
         </span>
       </Button>
+      <div className="text-center mt-4 text-white bg-black/30 px-4 py-2 rounded-lg">
+        Speak 3 numbers between 1-4 clearly
+      </div>
     </div>
   );
 };

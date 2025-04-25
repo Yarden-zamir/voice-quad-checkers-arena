@@ -23,16 +23,16 @@ export const useSpeechRecognition = ({ onResult, onError, onListeningChange }: S
       setIsInitializing(true);
       if (onListeningChange) onListeningChange(true);
       
-      console.log("Loading speech recognition model...");
+      console.log("Loading OpenAI Whisper model...");
       
-      // Use a model that's known to work in browsers
+      // Using the Whisper tiny model in English that's compatible with the browser
       modelRef.current = await pipeline(
         "automatic-speech-recognition",
-        "onnx-community/whisper-tiny.en"
+        "Xenova/whisper-tiny.en"
       );
       
       setIsInitialized(true);
-      console.log("Speech recognition model loaded successfully");
+      console.log("OpenAI Whisper model loaded successfully");
       
     } catch (error) {
       console.error("Failed to initialize speech recognition model:", error);
@@ -62,8 +62,8 @@ export const useSpeechRecognition = ({ onResult, onError, onListeningChange }: S
       // Request microphone access with optimal settings for speech recognition
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
-          sampleRate: 16000, // Works best with 16kHz audio
-          channelCount: 1,   // Mono audio
+          sampleRate: 16000,  // Whisper works best with 16kHz audio
+          channelCount: 1,    // Mono audio
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true
@@ -111,7 +111,7 @@ export const useSpeechRecognition = ({ onResult, onError, onListeningChange }: S
           
           console.log(`Audio blob created: ${audioBlob.size} bytes, type: ${audioBlob.type}`);
           
-          // Process audio with model
+          // Process audio with Whisper model
           if (modelRef.current) {
             // Create a File object from the Blob with proper name and type
             const audioFile = new File(
@@ -120,9 +120,9 @@ export const useSpeechRecognition = ({ onResult, onError, onListeningChange }: S
               { type: mediaRecorder.mimeType }
             );
             
-            console.log("Transcribing audio...");
+            console.log("Transcribing with Whisper...");
             const result = await modelRef.current(audioFile);
-            console.log("Transcription result:", result);
+            console.log("Whisper transcription result:", result);
             
             if (result && result.text && result.text.trim() !== "") {
               onResult(result.text);
@@ -142,7 +142,7 @@ export const useSpeechRecognition = ({ onResult, onError, onListeningChange }: S
       };
       
       // Start recording with a timeslice to collect data more frequently
-      mediaRecorder.start(250); // Collect data every 250ms
+      mediaRecorder.start(500); // Collect data every 500ms for larger chunks
       if (onListeningChange) onListeningChange(true);
       console.log("Recording started");
       
