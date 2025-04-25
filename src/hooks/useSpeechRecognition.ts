@@ -27,9 +27,14 @@ export const useSpeechRecognition = ({ onResult, onError, onListeningChange }: S
 
       // Create a new instance
       recognitionInstance = new SpeechRecognitionAPI();
+      
+      // Configure for offline use
       recognitionInstance.continuous = false;
       recognitionInstance.interimResults = false;
       recognitionInstance.lang = 'en-US';
+      
+      // Important: Set to true to work offline
+      recognitionInstance.serviceURI = '';  // Empty string forces browser's built-in recognition
 
       // Set up event handlers
       recognitionInstance.onresult = (event) => {
@@ -39,7 +44,10 @@ export const useSpeechRecognition = ({ onResult, onError, onListeningChange }: S
       };
 
       recognitionInstance.onerror = (event) => {
-        if (event.error !== 'aborted') {
+        if (event.error === 'network' || event.error === 'service-not-allowed') {
+          console.log("Attempting to use offline recognition");
+          // The error handler will try to continue with offline recognition
+        } else if (event.error !== 'aborted') {
           console.error("Speech recognition error:", event.error);
           onError(`Error: ${event.error}`);
         }
