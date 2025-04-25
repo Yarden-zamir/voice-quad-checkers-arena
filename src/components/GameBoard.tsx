@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import Board from './Board';
 import { Button } from "@/components/ui/button";
@@ -23,23 +24,23 @@ const GameBoard: React.FC<GameBoardProps> = ({ markers, currentPlayer, onCellCli
   return (
     <div className="pt-24 px-4 bg-gray-100 min-h-screen relative">
       <div className="fixed top-4 left-0 right-0 z-20 flex justify-center gap-4 bg-white/80 backdrop-blur-sm py-4 px-4 shadow-md">
-        <div className="flex items-center gap-2 bg-white p-2 rounded-lg shadow">
+        <div className="flex items-center gap-2 bg-white p-4 rounded-lg shadow">
           <Switch
             id="hide-history"
             checked={hideHistory}
             onCheckedChange={setHideHistory}
           />
-          <label htmlFor="hide-history" className="text-sm font-medium cursor-pointer">
-            <History className="h-4 w-4 inline-block mr-2" />
+          <label htmlFor="hide-history" className="text-lg font-medium cursor-pointer">
+            <History className="h-8 w-8 inline-block mr-2" />
             Hide History
           </label>
         </div>
         
         <Button
           onClick={() => setIsHidden(prev => !prev)}
-          className="shadow-sm"
+          className="shadow-sm text-lg px-8 py-6 h-auto"
         >
-          {isHidden ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+          {isHidden ? <Eye className="h-8 w-8" /> : <EyeOff className="h-8 w-8" />}
           {isHidden ? 'Show Board' : 'Hide Board'}
         </Button>
       </div>

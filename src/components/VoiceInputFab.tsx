@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Mic, MicOff } from "lucide-react";
@@ -32,9 +31,24 @@ const VoiceInputFab: React.FC<VoiceInputFabProps> = ({ onCoordinatesReceived }) 
       recognition.current.interimResults = false;
       recognition.current.lang = 'en-US';
 
+      recognition.current.onstart = () => {
+        toast({
+          title: "Debug",
+          description: "Speech recognition started",
+          duration: 1000,
+          className: "toast-with-progress",
+        });
+      };
+
       recognition.current.onresult = (event) => {
         const text = event.results[0][0].transcript.toLowerCase();
         console.log("Recognized text:", text);
+        toast({
+          title: "Debug",
+          description: `Raw text: "${text}"`,
+          duration: 1500,
+          className: "toast-with-progress",
+        });
         
         const coordinatesMatch = text.match(/(\d+)\D+(\d+)\D+(\d+)/);
         
@@ -136,15 +150,15 @@ const VoiceInputFab: React.FC<VoiceInputFabProps> = ({ onCoordinatesReceived }) 
 
   return (
     <Button
-      className={`fixed bottom-4 left-4 rounded-full w-12 h-12 p-0 shadow-lg ${isLoading ? 'animate-pulse' : ''}`}
+      className={`fixed bottom-8 left-8 rounded-full w-24 h-24 p-0 shadow-lg ${isLoading ? 'animate-pulse' : ''}`}
       onClick={toggleListening}
       variant="default"
       disabled={isLoading && !isListening}
     >
       {isListening ? (
-        <MicOff className="h-6 w-6" />
+        <MicOff className="h-12 w-12" />
       ) : (
-        <Mic className="h-6 w-6" />
+        <Mic className="h-12 w-12" />
       )}
     </Button>
   );
