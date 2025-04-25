@@ -5,10 +5,18 @@ interface SpeechRecognitionProps {
 }
 
 export const useSpeechRecognition = ({ onResult, onError }: SpeechRecognitionProps) => {
-  let recognition: SpeechRecognition | null = null;
+  // Use a closure to store the recognition instance
+  let recognitionInstance: SpeechRecognition | null = null;
 
   const startListening = () => {
     try {
+      // Stop any existing recognition session first
+      if (recognitionInstance) {
+        recognitionInstance.abort();
+        recognitionInstance = null;
+      }
+
+      // Get the appropriate SpeechRecognition interface
       const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
       
       if (!SpeechRecognitionAPI) {
@@ -16,32 +24,49 @@ export const useSpeechRecognition = ({ onResult, onError }: SpeechRecognitionPro
         return;
       }
 
-      recognition = new SpeechRecognitionAPI();
-      recognition.continuous = false;
-      recognition.interimResults = false;
-      recognition.lang = 'en-US';
+      // Create a new instance
+      recognitionInstance = new SpeechRecognitionAPI();
+      recognitionInstance.continuous = false;
+      recognitionInstance.interimResults = false;
+      recognitionInstance.lang = 'en-US';
 
-      recognition.onresult = (event) => {
+      // Set up event handlers
+      recognitionInstance.onresult = (event) => {
         const transcript = event.results[0][0].transcript;
+        console.log("Speech recognized:", transcript);
         onResult(transcript);
       };
 
-      recognition.onerror = (event) => {
+      recognitionInstance.onerror = (event) => {
         if (event.error !== 'aborted') {
+          console.error("Speech recognition error:", event.error);
           onError(`Error: ${event.error}`);
         }
       };
 
-      recognition.start();
+      recognitionInstance.onend = () => {
+        console.log("Speech recognition ended");
+      };
+
+      // Start the recognition
+      console.log("Starting speech recognition");
+      recognitionInstance.start();
     } catch (error) {
+      console.error("Failed to start speech recognition:", error);
       onError("Speech recognition failed to start");
     }
   };
 
   const stopListening = () => {
-    if (recognition) {
-      recognition.stop();
-      recognition = null;
+    if (recognitionInstance) {
+      console.log("Stopping speech recognition");
+      try {
+        recognitionInstance.stop();
+      } catch (error) {
+        console.error("Error stopping speech recognition:", error);
+      } finally {
+        recognitionInstance = null;
+      }
     }
   };
 

@@ -14,25 +14,41 @@ const VoiceController: React.FC<VoiceControllerProps> = ({
 }) => {
   const [isListening, setIsListening] = useState(false);
   const { toast } = useToast();
+  
   const { startListening, stopListening } = useSpeechRecognition({
     onResult: (transcript) => {
+      console.log("Processing transcript:", transcript);
+      
+      // Extract numbers from the transcript
       const numbers = transcript
         .split(' ')
-        .map(word => parseInt(word))
-        .filter(num => !isNaN(num) && num >= 0 && num <= 9)
-        .slice(0, 3);
+        .map(word => {
+          const num = parseInt(word);
+          return isNaN(num) ? null : num;
+        })
+        .filter(num => num !== null && num >= 0 && num <= 9)
+        .slice(0, 3) as number[];
 
+      console.log("Extracted numbers:", numbers);
+
+      // Only proceed if we have exactly 3 numbers
       if (numbers.length === 3) {
         onCoordinatesReceived(numbers);
         toast({
           title: "Coordinates received",
           description: `Using ${numbers.join(', ')}`
         });
+      } else {
+        toast({
+          title: "Incomplete coordinates",
+          description: `Need exactly 3 numbers. Got: ${numbers.length > 0 ? numbers.join(', ') : 'none'}`,
+          variant: "destructive"
+        });
       }
     },
     onError: (error) => {
       toast({
-        title: "Error",
+        title: "Voice recognition error",
         description: error,
         variant: "destructive"
       });
@@ -40,15 +56,24 @@ const VoiceController: React.FC<VoiceControllerProps> = ({
   });
 
   const handlePointerDown = () => {
-    console.log("Starting listening");
+    console.log("Button pressed - starting listening");
     setIsListening(true);
     startListening();
   };
 
   const handlePointerUp = () => {
-    console.log("Stopping listening");
+    console.log("Button released - stopping listening");
     setIsListening(false);
     stopListening();
+  };
+
+  // Handle pointer leave to prevent button staying in active state if pointer leaves while pressed
+  const handlePointerLeave = () => {
+    if (isListening) {
+      console.log("Pointer left while listening - stopping listening");
+      setIsListening(false);
+      stopListening();
+    }
   };
 
   return (
@@ -56,21 +81,26 @@ const VoiceController: React.FC<VoiceControllerProps> = ({
       <Button
         onPointerDown={handlePointerDown}
         onPointerUp={handlePointerUp}
-        onPointerLeave={handlePointerUp}
+        onPointerLeave={handlePointerLeave}
         className={`
           rounded-full 
-          px-12 
-          py-12 
-          text-2xl 
+          w-20 
+          h-20 
+          text-base
           flex 
-          gap-3 
+          flex-col
+          justify-center
           items-center 
           select-none 
-          ${isListening ? 'bg-red-500' : 'bg-primary hover:bg-primary/90'}
+          transition-colors
+          duration-200
+          ${isListening ? 'bg-red-500 hover:bg-red-600' : 'bg-primary hover:bg-primary/90'}
         `}
       >
-        <Mic className="h-8 w-8" />
-        {isListening ? 'Listening...' : 'Hold to Speak'}
+        <Mic className="h-8 w-8 mb-1" />
+        <span className="text-sm select-none">
+          {isListening ? 'Listening...' : 'Hold to Speak'}
+        </span>
       </Button>
     </div>
   );
