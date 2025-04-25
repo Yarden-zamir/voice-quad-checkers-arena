@@ -1,6 +1,6 @@
+
 import { useState, useCallback } from 'react';
 import GameBoard from '../components/GameBoard';
-import VoiceController from '../components/VoiceController';
 import { useToast } from "@/components/ui/use-toast";
 import { playErrorSound } from '../utils/audio';
 import { checkWin } from '../utils/winConditions';
@@ -69,37 +69,6 @@ const Index = () => {
     setCurrentPlayer(current => current === 1 ? 2 : 1);
   }, [currentPlayer, gameOver, toast]);
 
-  const handleCoordinates = useCallback((coordinates: number[]) => {
-    console.log("Handling coordinates:", coordinates);
-    
-    if (!coordinates || coordinates.length !== 3) {
-      console.log("Invalid coordinates received", coordinates);
-      if (coordinates.length > 0) {
-        toast({
-          title: "Invalid coordinates",
-          description: `Please provide exactly 3 numbers (x, y, z). Received: ${coordinates.join(', ')}`,
-        });
-      }
-      return;
-    }
-
-    const adjustedCoords = coordinates.map(coord => Math.min(Math.max(coord, 1), 4) - 1);
-    const [x, y, z] = adjustedCoords;
-    
-    console.log("Adjusted coordinates:", x, y, z);
-    
-    if (x === undefined || y === undefined || z === undefined) {
-      console.log("Invalid coordinates after mapping", { x, y, z });
-      toast({
-        title: "Invalid coordinates",
-        description: "Please provide valid x, y, z coordinates between 1 and 4",
-      });
-      return;
-    }
-
-    handleCellClick(x, y, z);
-  }, [handleCellClick, toast]);
-
   return (
     <div className="relative">
       <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-10 bg-white/10 backdrop-blur-md px-6 py-3 rounded-full">
@@ -113,11 +82,9 @@ const Index = () => {
         onCellClick={handleCellClick}
         lastMove={lastMove}
       />
-      <VoiceController 
-        onCoordinatesReceived={handleCoordinates}
-      />
     </div>
   );
 };
 
 export default Index;
+
