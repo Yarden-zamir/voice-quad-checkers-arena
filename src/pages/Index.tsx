@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import GameBoard from '../components/GameBoard';
 import { useToast } from "@/components/ui/use-toast";
@@ -69,13 +68,17 @@ const Index = () => {
     setCurrentPlayer(current => current === 1 ? 2 : 1);
   }, [currentPlayer, gameOver, toast]);
 
+  const bgColor = currentPlayer === 1 ? 'bg-purple-500/20' : 'bg-blue-500/20';
+
   return (
-    <div className="relative">
-      <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-10 bg-white/10 backdrop-blur-md px-6 py-3 rounded-full">
-        <h1 className="text-2xl font-bold text-white">
-          {gameOver ? `Player ${currentPlayer === 1 ? 2 : 1} Wins!` : `Player ${currentPlayer}'s Turn`}
-        </h1>
-      </div>
+    <div className={`relative min-h-screen transition-colors duration-300 ${bgColor}`}>
+      {gameOver && (
+        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-10 bg-white/10 backdrop-blur-md px-6 py-3 rounded-full">
+          <h1 className="text-2xl font-bold text-white">
+            Player {currentPlayer === 1 ? 2 : 1} Wins!
+          </h1>
+        </div>
+      )}
       <GameBoard 
         markers={markers}
         currentPlayer={currentPlayer}
@@ -87,4 +90,3 @@ const Index = () => {
 };
 
 export default Index;
-
