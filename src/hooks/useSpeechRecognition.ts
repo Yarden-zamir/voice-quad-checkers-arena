@@ -11,32 +11,31 @@ interface SpeechRecognitionProps {
 export const useSpeechRecognition = ({ onResult, onError, onListeningChange }: SpeechRecognitionProps) => {
   const [isInitialized, setIsInitialized] = useState(false);
   const [isInitializing, setIsInitializing] = useState(false);
-  const whisperRef = useRef<any>(null);
+  const modelRef = useRef<any>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   
-  // Initialize Whisper model
-  const initializeWhisper = useCallback(async () => {
+  // Initialize ASR model
+  const initializeModel = useCallback(async () => {
     if (isInitialized || isInitializing) return;
     
     try {
       setIsInitializing(true);
       if (onListeningChange) onListeningChange(true);
       
-      console.log("Loading Whisper model...");
+      console.log("Loading speech recognition model...");
       
-      // Initialize the Whisper model using @huggingface/transformers
-      whisperRef.current = await pipeline(
+      // Use a model that's known to work in browsers
+      modelRef.current = await pipeline(
         "automatic-speech-recognition",
-        "openai/whisper-tiny.en",
-        { revision: "main" }
+        "onnx-community/whisper-tiny.en"
       );
       
       setIsInitialized(true);
-      console.log("Whisper model loaded successfully");
+      console.log("Speech recognition model loaded successfully");
       
     } catch (error) {
-      console.error("Failed to initialize Whisper:", error);
+      console.error("Failed to initialize speech recognition model:", error);
       onError("Failed to initialize speech recognition model");
       if (onListeningChange) onListeningChange(false);
     } finally {
@@ -48,7 +47,7 @@ export const useSpeechRecognition = ({ onResult, onError, onListeningChange }: S
     try {
       // Make sure model is initialized
       if (!isInitialized && !isInitializing) {
-        await initializeWhisper();
+        await initializeModel();
         return; // Wait for model to initialize before starting recording
       }
       
@@ -63,7 +62,7 @@ export const useSpeechRecognition = ({ onResult, onError, onListeningChange }: S
       // Request microphone access with optimal settings for speech recognition
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
-          sampleRate: 16000, // Whisper works best with 16kHz audio
+          sampleRate: 16000, // Works best with 16kHz audio
           channelCount: 1,   // Mono audio
           echoCancellation: true,
           noiseSuppression: true,
@@ -112,8 +111,8 @@ export const useSpeechRecognition = ({ onResult, onError, onListeningChange }: S
           
           console.log(`Audio blob created: ${audioBlob.size} bytes, type: ${audioBlob.type}`);
           
-          // Process audio with Whisper
-          if (whisperRef.current) {
+          // Process audio with model
+          if (modelRef.current) {
             // Create a File object from the Blob with proper name and type
             const audioFile = new File(
               [audioBlob], 
@@ -121,12 +120,9 @@ export const useSpeechRecognition = ({ onResult, onError, onListeningChange }: S
               { type: mediaRecorder.mimeType }
             );
             
-            console.log("Transcribing with Whisper...");
-            const result = await whisperRef.current(audioFile, { 
-              chunk_length_s: 30,
-              stride_length_s: 5
-            });
-            console.log("Whisper result:", result);
+            console.log("Transcribing audio...");
+            const result = await modelRef.current(audioFile);
+            console.log("Transcription result:", result);
             
             if (result && result.text && result.text.trim() !== "") {
               onResult(result.text);
@@ -146,7 +142,7 @@ export const useSpeechRecognition = ({ onResult, onError, onListeningChange }: S
       };
       
       // Start recording with a timeslice to collect data more frequently
-      mediaRecorder.start(200); // Collect data every 200ms
+      mediaRecorder.start(250); // Collect data every 250ms
       if (onListeningChange) onListeningChange(true);
       console.log("Recording started");
       
@@ -155,7 +151,7 @@ export const useSpeechRecognition = ({ onResult, onError, onListeningChange }: S
       onError(`Speech recognition failed to start: ${error.message || "Unknown error"}`);
       if (onListeningChange) onListeningChange(false);
     }
-  }, [isInitialized, isInitializing, initializeWhisper, onListeningChange, onResult, onError]);
+  }, [isInitialized, isInitializing, initializeModel, onListeningChange, onResult, onError]);
   
   const stopListening = useCallback(() => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
