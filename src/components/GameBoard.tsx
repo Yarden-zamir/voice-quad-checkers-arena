@@ -40,7 +40,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
           className="data-[state=on]:bg-blue-500 data-[state=on]:text-white"
         >
           <History className="h-4 w-4 mr-2" />
-          {hideHistory ? 'Show History' : 'Hide History'}
+          History
         </Toggle>
         
         <Toggle
@@ -51,7 +51,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
           className="data-[state=on]:bg-blue-500 data-[state=on]:text-white"
         >
           {isHidden ? <Eye className="h-4 w-4 mr-2" /> : <EyeOff className="h-4 w-4 mr-2" />}
-          {isHidden ? 'Show Board' : 'Hide Board'}
+          Board
         </Toggle>
 
         <Button
@@ -60,7 +60,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
           aria-label="Reset Game"
         >
           <RotateCcw className="h-4 w-4 mr-2" />
-          Reset Game
+          Reset
         </Button>
       </div>
       
