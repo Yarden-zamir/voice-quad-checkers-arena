@@ -2,9 +2,10 @@
 interface SpeechRecognitionProps {
   onResult: (transcript: string) => void;
   onError: (error: string) => void;
+  onListeningChange?: (isListening: boolean) => void;
 }
 
-export const useSpeechRecognition = ({ onResult, onError }: SpeechRecognitionProps) => {
+export const useSpeechRecognition = ({ onResult, onError, onListeningChange }: SpeechRecognitionProps) => {
   // Use a closure to store the recognition instance
   let recognitionInstance: SpeechRecognition | null = null;
 
@@ -44,8 +45,14 @@ export const useSpeechRecognition = ({ onResult, onError }: SpeechRecognitionPro
         }
       };
 
+      recognitionInstance.onstart = () => {
+        console.log("Speech recognition started");
+        if (onListeningChange) onListeningChange(true);
+      };
+
       recognitionInstance.onend = () => {
         console.log("Speech recognition ended");
+        if (onListeningChange) onListeningChange(false);
       };
 
       // Start the recognition
@@ -54,6 +61,7 @@ export const useSpeechRecognition = ({ onResult, onError }: SpeechRecognitionPro
     } catch (error) {
       console.error("Failed to start speech recognition:", error);
       onError("Speech recognition failed to start");
+      if (onListeningChange) onListeningChange(false);
     }
   };
 
