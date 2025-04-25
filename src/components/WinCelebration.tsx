@@ -1,14 +1,14 @@
 
 import { useEffect, useState } from 'react';
 import ReactConfetti from 'react-confetti';
-import { useWindowSize } from 'react-confetti';
+import useWindowSize from 'react-confetti'; // Changed import syntax
 
 interface WinCelebrationProps {
   isActive: boolean;
 }
 
 const WinCelebration = ({ isActive }: WinCelebrationProps) => {
-  const { width, height } = useWindowSize();
+  const { width, height } = useWindowSize(); // This remains the same
   const [isConfettiActive, setIsConfettiActive] = useState(false);
 
   useEffect(() => {
