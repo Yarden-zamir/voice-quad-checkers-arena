@@ -26,7 +26,6 @@ export const useSpeechRecognition = ({ onResult, onError, onListeningChange }: S
       console.log("Loading Whisper model...");
       
       // Initialize the Whisper model using @huggingface/transformers
-      // Remove the quantized property as it's not recognized in the type definition
       whisperRef.current = await pipeline(
         "automatic-speech-recognition",
         "onnx-community/whisper-tiny.en"
@@ -60,10 +59,20 @@ export const useSpeechRecognition = ({ onResult, onError, onListeningChange }: S
       audioChunksRef.current = [];
       
       // Request microphone access
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          sampleRate: 16000,
+          channelCount: 1,
+          echoCancellation: true,
+          noiseSuppression: true
+        } 
+      });
       
-      // Create media recorder
-      const mediaRecorder = new MediaRecorder(stream);
+      // Create media recorder with optimized settings
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/ogg',
+        audioBitsPerSecond: 128000
+      });
       mediaRecorderRef.current = mediaRecorder;
       
       // Set up event handlers
@@ -78,19 +87,35 @@ export const useSpeechRecognition = ({ onResult, onError, onListeningChange }: S
         if (onListeningChange) onListeningChange(false);
         
         try {
+          if (audioChunksRef.current.length === 0) {
+            throw new Error("No audio recorded");
+          }
+          
           // Convert audio chunks to blob
-          const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+          const audioBlob = new Blob(audioChunksRef.current, { 
+            type: mediaRecorder.mimeType 
+          });
+          
+          if (audioBlob.size < 100) {
+            throw new Error("Audio recording too short");
+          }
+          
+          console.log(`Audio blob created: ${audioBlob.size} bytes, type: ${audioBlob.type}`);
           
           // Process audio with Whisper
           if (whisperRef.current) {
-            // Create a File object from the Blob
-            const audioFile = new File([audioBlob], "recording.webm", { type: 'audio/webm' });
+            // Create a File object from the Blob with proper name and type
+            const audioFile = new File(
+              [audioBlob], 
+              "recording.webm", 
+              { type: mediaRecorder.mimeType }
+            );
             
             console.log("Transcribing with Whisper...");
             const result = await whisperRef.current(audioFile);
             console.log("Whisper result:", result);
             
-            if (result && result.text) {
+            if (result && result.text && result.text.trim() !== "") {
               onResult(result.text);
             } else {
               onError("No speech detected");
@@ -98,23 +123,23 @@ export const useSpeechRecognition = ({ onResult, onError, onListeningChange }: S
           } else {
             onError("Speech recognition model not initialized");
           }
-        } catch (error) {
+        } catch (error: any) {
           console.error("Error processing audio:", error);
-          onError("Failed to process speech");
+          onError(`Failed to process speech: ${error.message || "Unknown error"}`);
         } finally {
           // Close all audio tracks
           stream.getTracks().forEach(track => track.stop());
         }
       };
       
-      // Start recording
-      mediaRecorder.start();
+      // Start recording with a timeslice to collect data more frequently
+      mediaRecorder.start(100);
       if (onListeningChange) onListeningChange(true);
       console.log("Recording started");
       
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to start speech recognition:", error);
-      onError("Speech recognition failed to start");
+      onError(`Speech recognition failed to start: ${error.message || "Unknown error"}`);
       if (onListeningChange) onListeningChange(false);
     }
   }, [isInitialized, isInitializing, initializeWhisper, onListeningChange, onResult, onError]);
