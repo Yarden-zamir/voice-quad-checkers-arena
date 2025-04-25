@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Mic, MicOff } from "lucide-react";
@@ -79,8 +78,8 @@ const VoiceInputFab: React.FC<VoiceInputFabProps> = ({ onCoordinatesReceived }) 
         } else {
           toast({
             title: "No Coordinates Found",
-            description: "Try saying three numbers, like '2 3 4'",
-            duration: 3000,
+            description: `You said: "${text}". Try saying three numbers, like '2 3 4'`,
+            duration: 5000,
           });
         }
         setIsListening(false);
