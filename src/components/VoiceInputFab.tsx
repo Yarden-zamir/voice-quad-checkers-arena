@@ -3,6 +3,7 @@ import React, { useState, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Mic, MicOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { pipeline } from "@huggingface/transformers";
 
 interface VoiceInputFabProps {
   onCoordinatesReceived: (x: number, y: number, z: number) => void;
@@ -11,99 +12,95 @@ interface VoiceInputFabProps {
 const VoiceInputFab: React.FC<VoiceInputFabProps> = ({ onCoordinatesReceived }) => {
   const [isListening, setIsListening] = useState(false);
   const { toast } = useToast();
-  
-  // Reference for SpeechRecognition
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
-  
-  // Start listening for voice input
-  const startListening = async () => {
-    try {
-      // Check if the browser supports the Web Speech API
-      if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+  const transcriber = useRef<any>(null);
+  const mediaRecorder = useRef<MediaRecorder | null>(null);
+  const audioChunks = useRef<Blob[]>([]);
+
+  const initializeTranscriber = async () => {
+    if (!transcriber.current) {
+      try {
+        transcriber.current = await pipeline(
+          "automatic-speech-recognition",
+          "onnx-community/whisper-tiny.en",
+          { quantized: true }
+        );
+      } catch (error) {
+        console.error("Failed to initialize transcriber:", error);
         toast({
           title: "Error",
-          description: "Speech recognition is not supported in this browser",
+          description: "Failed to initialize offline speech recognition",
           duration: 3000,
           className: "toast-with-progress",
         });
-        return;
       }
+    }
+  };
+
+  const startListening = async () => {
+    try {
+      await initializeTranscriber();
       
-      // Initialize the speech recognition
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      recognitionRef.current = new SpeechRecognition();
-      
-      // Configure speech recognition
-      recognitionRef.current.lang = 'en-US';
-      recognitionRef.current.continuous = false;
-      recognitionRef.current.interimResults = false;
-      recognitionRef.current.maxAlternatives = 1;
-      
-      // Set up event handlers
-      recognitionRef.current.onresult = (event) => {
-        const speechResult = event.results[0][0].transcript;
-        console.log("Speech recognized:", speechResult);
-        
-        // Extract coordinates from text using regex
-        const coordinatesMatch = speechResult.match(/(\d+)\D+(\d+)\D+(\d+)/);
-        
-        if (coordinatesMatch) {
-          const x = parseInt(coordinatesMatch[1]);
-          const y = parseInt(coordinatesMatch[2]);
-          const z = parseInt(coordinatesMatch[3]);
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorder.current = new MediaRecorder(stream);
+      audioChunks.current = [];
+
+      mediaRecorder.current.ondataavailable = (event) => {
+        audioChunks.current.push(event.data);
+      };
+
+      mediaRecorder.current.onstop = async () => {
+        const audioBlob = new Blob(audioChunks.current, { type: 'audio/wav' });
+        try {
+          const result = await transcriber.current(audioBlob);
+          console.log("Transcription result:", result);
           
-          if (!isNaN(x) && !isNaN(y) && !isNaN(z)) {
-            // Validate coordinates
-            if (x >= 1 && x <= 4 && y >= 1 && y <= 4 && z >= 1 && z <= 4) {
-              toast({
-                title: "Coordinates Recognized",
-                description: `Position: ${x}, ${y}, ${z}`,
-                duration: 800,
-                className: "toast-with-progress",
-              });
-              
-              // Call the callback with the recognized coordinates
-              onCoordinatesReceived(x, y, z);
-            } else {
-              toast({
-                title: "Invalid Coordinates",
-                description: "Coordinates must be between 1 and 4",
-                duration: 800,
-                className: "toast-with-progress",
-              });
+          const text = result.text.toLowerCase();
+          const coordinatesMatch = text.match(/(\d+)\D+(\d+)\D+(\d+)/);
+          
+          if (coordinatesMatch) {
+            const x = parseInt(coordinatesMatch[1]);
+            const y = parseInt(coordinatesMatch[2]);
+            const z = parseInt(coordinatesMatch[3]);
+            
+            if (!isNaN(x) && !isNaN(y) && !isNaN(z)) {
+              if (x >= 1 && x <= 4 && y >= 1 && y <= 4 && z >= 1 && z <= 4) {
+                toast({
+                  title: "Coordinates Recognized",
+                  description: `Position: ${x}, ${y}, ${z}`,
+                  duration: 800,
+                  className: "toast-with-progress",
+                });
+                onCoordinatesReceived(x, y, z);
+              } else {
+                toast({
+                  title: "Invalid Coordinates",
+                  description: "Coordinates must be between 1 and 4",
+                  duration: 800,
+                  className: "toast-with-progress",
+                });
+              }
             }
+          } else {
+            toast({
+              title: "No Coordinates Found",
+              description: "Try saying three numbers, like '2 3 4'",
+              duration: 1000,
+              className: "toast-with-progress",
+            });
           }
-        } else {
+        } catch (error) {
+          console.error("Transcription error:", error);
           toast({
-            title: "No Coordinates Found",
-            description: "Try saying three numbers, like '2 3 4'",
-            duration: 1000,
+            title: "Recognition Error",
+            description: "Failed to process speech",
+            duration: 3000,
             className: "toast-with-progress",
           });
         }
-        
-        stopListening();
-      };
-      
-      recognitionRef.current.onerror = (event) => {
-        console.error("Speech recognition error:", event.error);
-        toast({
-          title: "Recognition Error",
-          description: event.error === "not-allowed" 
-            ? "Microphone access denied" 
-            : "Failed to recognize speech",
-          duration: 3000,
-          className: "toast-with-progress",
-        });
-        stopListening();
-      };
-      
-      recognitionRef.current.onend = () => {
         setIsListening(false);
       };
-      
-      // Start recognition
-      recognitionRef.current.start();
+
+      mediaRecorder.current.start();
       setIsListening(true);
       
       toast({
@@ -114,10 +111,10 @@ const VoiceInputFab: React.FC<VoiceInputFabProps> = ({ onCoordinatesReceived }) 
       });
       
     } catch (error) {
-      console.error("Error starting speech recognition:", error);
+      console.error("Error starting recording:", error);
       toast({
         title: "Error",
-        description: "Failed to start voice recognition",
+        description: "Failed to access microphone",
         duration: 3000,
         className: "toast-with-progress",
       });
@@ -125,16 +122,14 @@ const VoiceInputFab: React.FC<VoiceInputFabProps> = ({ onCoordinatesReceived }) 
     }
   };
 
-  // Stop listening
   const stopListening = () => {
-    if (recognitionRef.current) {
-      recognitionRef.current.stop();
-      recognitionRef.current = null;
+    if (mediaRecorder.current && mediaRecorder.current.state === 'recording') {
+      mediaRecorder.current.stop();
+      mediaRecorder.current.stream.getTracks().forEach(track => track.stop());
     }
     setIsListening(false);
   };
 
-  // Toggle listening state
   const toggleListening = () => {
     if (isListening) {
       stopListening();
