@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Mic, MicOff } from "lucide-react";
@@ -30,7 +29,7 @@ const VoiceInputFab: React.FC<VoiceInputFabProps> = ({ onCoordinatesReceived }) 
           description: `Position: ${x}, ${y}, ${z}`,
           duration: 3000,
         });
-        onCoordinatesReceived(x - 1, y - 1, z - 1); // Adjust coordinates here to match manual clicking
+        onCoordinatesReceived(x, y, z);
       } else {
         toast({
           title: "Invalid Coordinates",
