@@ -49,12 +49,12 @@ const Toast = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof ToastPrimitives.Root> &
     VariantProps<typeof toastVariants> &
     ToastCustomProps
->(({ className, variant, ...props }, ref) => {
+>(({ className, variant, hasProgressBar, ...props }, ref) => {
   const [progress, setProgress] = React.useState(100);
-  const hasProgressBar = props.className?.includes('toast-with-progress');
+  const toastWithProgress = className?.includes('toast-with-progress');
 
   React.useEffect(() => {
-    if (props.duration && hasProgressBar) {
+    if (props.duration && toastWithProgress) {
       const startTime = Date.now();
       const duration = props.duration;
 
@@ -70,7 +70,7 @@ const Toast = React.forwardRef<
 
       requestAnimationFrame(updateProgress);
     }
-  }, [props.duration, hasProgressBar]);
+  }, [props.duration, toastWithProgress]);
 
   return (
     <ToastPrimitives.Root
@@ -79,7 +79,7 @@ const Toast = React.forwardRef<
       {...props}
     >
       {props.children}
-      {hasProgressBar && props.duration && (
+      {toastWithProgress && props.duration && (
         <Progress value={progress} className="mt-2 h-1" />
       )}
     </ToastPrimitives.Root>
