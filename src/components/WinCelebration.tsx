@@ -1,15 +1,31 @@
 
 import { useEffect, useState } from 'react';
 import ReactConfetti from 'react-confetti';
-import useWindowSize from 'react-confetti'; // Changed import syntax
 
 interface WinCelebrationProps {
   isActive: boolean;
 }
 
 const WinCelebration = ({ isActive }: WinCelebrationProps) => {
-  const { width, height } = useWindowSize(); // This remains the same
+  const [windowSize, setWindowSize] = useState({
+    width: window.innerWidth,
+    height: window.innerHeight
+  });
+
   const [isConfettiActive, setIsConfettiActive] = useState(false);
+
+  useEffect(() => {
+    // Update window dimensions when the window is resized
+    const handleResize = () => {
+      setWindowSize({
+        width: window.innerWidth,
+        height: window.innerHeight
+      });
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     if (isActive) {
@@ -25,8 +41,8 @@ const WinCelebration = ({ isActive }: WinCelebrationProps) => {
 
   return (
     <ReactConfetti
-      width={width}
-      height={height}
+      width={windowSize.width}
+      height={windowSize.height}
       numberOfPieces={500}
       recycle={false}
       run={isConfettiActive}
