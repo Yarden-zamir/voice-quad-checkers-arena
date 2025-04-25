@@ -8,11 +8,13 @@ import { cn } from "@/lib/utils";
 interface VoiceInputFabProps {
   onCoordinatesReceived: (x: number, y: number, z: number) => void;
   fullScreen?: boolean;
+  currentPlayer: number;
 }
 
 const VoiceInputFab: React.FC<VoiceInputFabProps> = ({ 
   onCoordinatesReceived, 
-  fullScreen = false 
+  fullScreen = false,
+  currentPlayer
 }) => {
   const [isListening, setIsListening] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -169,7 +171,9 @@ const VoiceInputFab: React.FC<VoiceInputFabProps> = ({
           "w-72 h-72": fullScreen,
           "animate-pulse": isLoading && !isListening,
           "hover:scale-105": !fullScreen,
-          "hover:scale-102": fullScreen
+          "hover:scale-102": fullScreen,
+          "bg-purple-500 hover:bg-purple-600": currentPlayer === 1,
+          "bg-blue-500 hover:bg-blue-600": currentPlayer === 2
         }
       )}
       onClick={toggleListening}

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Board from './Board';
 import { Button } from "@/components/ui/button";
@@ -62,10 +61,10 @@ const GameBoard: React.FC<GameBoardProps> = ({ markers, currentPlayer, onCellCli
         )}
       </div>
       
-      {/* Modify VoiceInputFab to be full screen when board is hidden */}
       <VoiceInputFab 
         onCoordinatesReceived={handleCoordinatesReceived} 
         fullScreen={isHidden}
+        currentPlayer={currentPlayer}
       />
     </div>
   );
