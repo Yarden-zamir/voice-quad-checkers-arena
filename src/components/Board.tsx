@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useTileSize } from '@/contexts/TileSizeContext';
 
@@ -27,31 +28,36 @@ const Board: React.FC<BoardProps> = ({ markers, currentPlayer, onCellClick, hide
           : 'bg-gray-200';
     
     return (
-      <div className="p-0.5">
-        <div 
-          key={`cell-${x}-${y}-${z}`}
-          className={`${color} aspect-square flex items-center justify-center border border-gray-400 cursor-pointer hover:opacity-80 transition-opacity text-xs`}
-          onClick={() => onCellClick(x, y, z)}
-          style={{ transform: `scale(${tileSize})`, transformOrigin: 'center' }}
-        >
-          {!shouldHideCell && value !== 0 && (
-            <span className="text-white font-bold text-xs">
-              {value === 1 ? 'X' : 'O'}
-            </span>
-          )}
-          {value === 0 && (
-            <span className="text-gray-400 opacity-0 hover:opacity-100 text-[0.6rem]">
-              {x+1},{y+1},{z+1}
-            </span>
-          )}
-        </div>
+      <div 
+        key={`cell-${x}-${y}-${z}`}
+        className={`${color} aspect-square flex items-center justify-center border border-gray-400 cursor-pointer hover:opacity-80 transition-opacity text-xs`}
+        onClick={() => onCellClick(x, y, z)}
+      >
+        {!shouldHideCell && value !== 0 && (
+          <span className="text-white font-bold text-xs">
+            {value === 1 ? 'X' : 'O'}
+          </span>
+        )}
+        {value === 0 && (
+          <span className="text-gray-400 opacity-0 hover:opacity-100 text-[0.6rem]">
+            {x+1},{y+1},{z+1}
+          </span>
+        )}
       </div>
     );
   };
 
   const renderGrid = (gridIndex: number) => {
     return (
-      <div key={`grid-${gridIndex}`} className="grid grid-cols-4 gap-0.5 m-0.5">
+      <div 
+        key={`grid-${gridIndex}`} 
+        className="grid grid-cols-4 gap-0.5"
+        style={{ 
+          transform: `scale(${tileSize})`, 
+          transformOrigin: 'center',
+          margin: `${0.5 / tileSize}rem`
+        }}
+      >
         {Array.from({ length: 4 }, (_, y) => (
           Array.from({ length: 4 }, (_, z) => (
             renderCell(gridIndex, y, z)
