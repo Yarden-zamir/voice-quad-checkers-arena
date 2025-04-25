@@ -19,10 +19,10 @@ const VoiceInputFab: React.FC<VoiceInputFabProps> = ({ onCoordinatesReceived }) 
   const initializeTranscriber = async () => {
     if (!transcriber.current) {
       try {
+        // Removed the quantized option as it's not recognized in the type definitions
         transcriber.current = await pipeline(
           "automatic-speech-recognition",
-          "onnx-community/whisper-tiny.en",
-          { quantized: true }
+          "onnx-community/whisper-tiny.en"
         );
       } catch (error) {
         console.error("Failed to initialize transcriber:", error);
