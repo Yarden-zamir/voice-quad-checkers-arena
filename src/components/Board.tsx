@@ -5,14 +5,25 @@ interface BoardProps {
   markers: number[][][];
   currentPlayer: number;
   onCellClick: (x: number, y: number, z: number) => void;
+  hideHistory: boolean;
+  lastMove?: { x: number; y: number; z: number } | null;
 }
 
-const Board: React.FC<BoardProps> = ({ markers, currentPlayer, onCellClick }) => {
-  // Safely render a cell or return an empty cell if coordinates are invalid
+const Board: React.FC<BoardProps> = ({ markers, currentPlayer, onCellClick, hideHistory, lastMove }) => {
   const renderCell = (x: number, y: number, z: number) => {
-    // Handle potential undefined values safely
     const value = markers && markers[x] && markers[x][y] ? markers[x][y][z] : 0;
-    const color = value === 1 ? 'bg-purple-500' : value === 2 ? 'bg-blue-500' : 'bg-gray-200';
+    const isLastMove = lastMove && lastMove.x === x && lastMove.y === y && lastMove.z === z;
+    
+    // Determine if the cell should be hidden
+    const shouldHideCell = hideHistory && value !== 0 && !isLastMove;
+    
+    const color = shouldHideCell 
+      ? 'bg-gray-200' 
+      : value === 1 
+        ? 'bg-purple-500' 
+        : value === 2 
+          ? 'bg-blue-500' 
+          : 'bg-gray-200';
     
     return (
       <div 
@@ -20,7 +31,7 @@ const Board: React.FC<BoardProps> = ({ markers, currentPlayer, onCellClick }) =>
         className={`${color} w-10 h-10 flex items-center justify-center border border-gray-400 cursor-pointer hover:opacity-80 transition-opacity`}
         onClick={() => onCellClick(x, y, z)}
       >
-        {value !== 0 && (
+        {!shouldHideCell && value !== 0 && (
           <span className="text-white font-bold text-lg">
             {value === 1 ? 'X' : 'O'}
           </span>

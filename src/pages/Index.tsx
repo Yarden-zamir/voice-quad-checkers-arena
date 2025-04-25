@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import GameBoard from '../components/GameBoard';
 import VoiceController from '../components/VoiceController';
@@ -10,7 +9,7 @@ const Index = () => {
   const { toast } = useToast();
   const [currentPlayer, setCurrentPlayer] = useState(1);
   const [gameOver, setGameOver] = useState(false);
-  // Initialize the 4x4x4 array
+  const [lastMove, setLastMove] = useState<{ x: number; y: number; z: number } | null>(null);
   const [markers, setMarkers] = useState([
     [[0,0,0,0], [0,0,0,0], [0,0,0,0], [0,0,0,0]],
     [[0,0,0,0], [0,0,0,0], [0,0,0,0], [0,0,0,0]],
@@ -28,7 +27,6 @@ const Index = () => {
     }
 
     setMarkers(prev => {
-      // Ensure we have a valid position to modify
       if (!prev[x] || !prev[x][y] || prev[x][y][z] === undefined) {
         playErrorSound();
         toast({
@@ -38,7 +36,6 @@ const Index = () => {
         return prev;
       }
 
-      // Check if position is already taken
       if (prev[x][y][z] !== 0) {
         playErrorSound();
         toast({
@@ -48,11 +45,11 @@ const Index = () => {
         return prev;
       }
 
-      // Create a deep copy of the markers array
       const newMarkers = JSON.parse(JSON.stringify(prev));
       newMarkers[x][y][z] = currentPlayer;
       
-      // Check for win condition
+      setLastMove({ x, y, z });
+      
       if (checkWin(newMarkers, currentPlayer)) {
         setGameOver(true);
         toast({
@@ -75,7 +72,6 @@ const Index = () => {
   const handleCoordinates = useCallback((coordinates: number[]) => {
     console.log("Handling coordinates:", coordinates);
     
-    // Make sure we have all three coordinates
     if (!coordinates || coordinates.length !== 3) {
       console.log("Invalid coordinates received", coordinates);
       if (coordinates.length > 0) {
@@ -87,13 +83,11 @@ const Index = () => {
       return;
     }
 
-    // Adjust coordinates to be 0-based and within bounds
     const adjustedCoords = coordinates.map(coord => Math.min(Math.max(coord, 1), 4) - 1);
     const [x, y, z] = adjustedCoords;
     
     console.log("Adjusted coordinates:", x, y, z);
     
-    // Check if coordinates are valid
     if (x === undefined || y === undefined || z === undefined) {
       console.log("Invalid coordinates after mapping", { x, y, z });
       toast({
@@ -103,7 +97,6 @@ const Index = () => {
       return;
     }
 
-    // Use the cell click handler for consistency
     handleCellClick(x, y, z);
   }, [handleCellClick, toast]);
 
@@ -118,6 +111,7 @@ const Index = () => {
         markers={markers}
         currentPlayer={currentPlayer}
         onCellClick={handleCellClick}
+        lastMove={lastMove}
       />
       <VoiceController 
         onCoordinatesReceived={handleCoordinates}
