@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Board from './Board';
 import { Button } from "@/components/ui/button";
@@ -11,7 +10,7 @@ interface GameBoardProps {
   markers: number[][][];
   currentPlayer: number;
   onCellClick: (x: number, y: number, z: number) => void;
-  onResetGame: () => void;  // New prop for reset game functionality
+  onResetGame: () => void;
   lastMove?: { x: number; y: number; z: number } | null;
 }
 
@@ -33,17 +32,14 @@ const GameBoard: React.FC<GameBoardProps> = ({
   return (
     <div className="min-h-screen bg-gray-100">
       <div className="sticky top-0 z-20 flex justify-center gap-4 bg-white/80 backdrop-blur-sm py-4 px-4 shadow-md">
-        <div className="flex items-center gap-2 bg-white p-2 rounded-lg shadow">
-          <Switch
-            id="hide-history"
-            checked={hideHistory}
-            onCheckedChange={setHideHistory}
-          />
-          <label htmlFor="hide-history" className="text-sm font-medium cursor-pointer">
-            <History className="h-4 w-4 inline-block mr-2" />
-            Hide History
-          </label>
-        </div>
+        <Toggle
+          pressed={hideHistory}
+          onPressedChange={setHideHistory}
+          className="shadow-sm"
+        >
+          <History className="h-4 w-4 mr-2" />
+          {hideHistory ? 'Show History' : 'Hide History'}
+        </Toggle>
         
         <Toggle
           pressed={isHidden}
