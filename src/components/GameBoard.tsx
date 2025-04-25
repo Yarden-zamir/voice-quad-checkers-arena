@@ -4,6 +4,7 @@ import Board from './Board';
 import { Toggle } from "@/components/ui/toggle";
 import { Eye, EyeOff, History, RotateCcw } from "lucide-react";
 import VoiceInputFab from './VoiceInputFab';
+import { Button } from "@/components/ui/button";
 
 interface GameBoardProps {
   markers: number[][][];
@@ -34,8 +35,9 @@ const GameBoard: React.FC<GameBoardProps> = ({
         <Toggle
           pressed={hideHistory}
           onPressedChange={setHideHistory}
-          className="shadow-sm data-[state=on]:bg-blue-100"
+          variant="outline"
           aria-label={hideHistory ? "Show History" : "Hide History"}
+          className="data-[state=on]:bg-blue-500 data-[state=on]:text-white"
         >
           <History className="h-4 w-4 mr-2" />
           {hideHistory ? 'Show History' : 'Hide History'}
@@ -44,21 +46,22 @@ const GameBoard: React.FC<GameBoardProps> = ({
         <Toggle
           pressed={isHidden}
           onPressedChange={setIsHidden}
-          className="shadow-sm data-[state=on]:bg-blue-100"
+          variant="outline"
           aria-label={isHidden ? "Show Board" : "Hide Board"}
+          className="data-[state=on]:bg-blue-500 data-[state=on]:text-white"
         >
           {isHidden ? <Eye className="h-4 w-4 mr-2" /> : <EyeOff className="h-4 w-4 mr-2" />}
           {isHidden ? 'Show Board' : 'Hide Board'}
         </Toggle>
 
-        <button
+        <Button
           onClick={onResetGame}
-          className="inline-flex items-center justify-center rounded-md text-sm font-medium shadow-sm px-4 py-2 bg-white hover:bg-gray-100 transition-colors"
+          variant="outline"
           aria-label="Reset Game"
         >
           <RotateCcw className="h-4 w-4 mr-2" />
           Reset Game
-        </button>
+        </Button>
       </div>
       
       <div className="pt-4 px-4">
