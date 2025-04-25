@@ -51,10 +51,10 @@ const Board: React.FC<BoardProps> = ({ markers, currentPlayer, onCellClick, hide
     return (
       <div 
         key={`grid-${gridIndex}`} 
-        className="grid grid-cols-4 gap-0.5"
+        className="grid grid-cols-4 gap-0.5 mx-auto"
         style={{ 
           transform: `scale(${tileSize})`, 
-          transformOrigin: 'top left',
+          transformOrigin: 'center',
           margin: `${1 / tileSize}rem`,
           width: 'fit-content'
         }}
@@ -69,11 +69,15 @@ const Board: React.FC<BoardProps> = ({ markers, currentPlayer, onCellClick, hide
   };
 
   return (
-    <div className="flex flex-wrap justify-center items-center gap-1 max-w-full">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full max-w-2xl mx-auto px-1">
-        {Array.from({ length: 4 }, (_, index) => renderGrid(index))}
+    <div className="flex flex-col justify-center items-center w-full">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full max-w-4xl mx-auto">
+        {Array.from({ length: 4 }, (_, index) => (
+          <div key={`grid-container-${index}`} className="flex justify-center">
+            {renderGrid(index)}
+          </div>
+        ))}
       </div>
-      <div className="w-full text-center mt-2">
+      <div className="w-full text-center mt-4">
         <div className="inline-block px-4 py-2 bg-white rounded-lg shadow">
           <span className="font-bold text-sm">Current Player: </span>
           <span className={`${currentPlayer === 1 ? "text-purple-500" : "text-blue-500"} font-bold text-sm`}>
