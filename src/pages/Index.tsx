@@ -4,7 +4,6 @@ import GameBoard from '../components/GameBoard';
 import { useToast } from "@/components/ui/use-toast";
 import { playErrorSound } from '../utils/audio';
 import { checkWin } from '../utils/winConditions';
-import { Progress } from "@/components/ui/progress";
 
 const Index = () => {
   const { toast } = useToast();
@@ -23,7 +22,6 @@ const Index = () => {
 
   const handleCellClick = useCallback((x: number, y: number, z: number) => {
     if (gameOver) {
-      // Use setTimeout to avoid state updates during render
       if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
       toastTimeoutRef.current = setTimeout(() => {
         toast({
@@ -39,7 +37,6 @@ const Index = () => {
     setMarkers(prev => {
       if (!prev[x] || !prev[x][y] || prev[x][y][z] === undefined) {
         playErrorSound();
-        // Use setTimeout to avoid state updates during render
         if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
         toastTimeoutRef.current = setTimeout(() => {
           toast({
@@ -54,7 +51,6 @@ const Index = () => {
 
       if (prev[x][y][z] !== 0) {
         playErrorSound();
-        // Use setTimeout to avoid state updates during render
         if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
         toastTimeoutRef.current = setTimeout(() => {
           toast({
@@ -72,14 +68,11 @@ const Index = () => {
       
       setLastMove({ x, y, z });
       
-      // Always switch the player on valid moves
-      setTimeout(() => {
-        setCurrentPlayer(current => current === 1 ? 2 : 1);
-      }, 0);
+      // Switch player BEFORE checking win condition
+      const nextPlayer = currentPlayer === 1 ? 2 : 1;
       
       if (checkWin(newMarkers, currentPlayer)) {
         setGameOver(true);
-        // Use setTimeout to avoid state updates during render
         if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
         toastTimeoutRef.current = setTimeout(() => {
           toast({
@@ -90,7 +83,6 @@ const Index = () => {
           });
         }, 0);
       } else {
-        // Use setTimeout to avoid state updates during render
         if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
         toastTimeoutRef.current = setTimeout(() => {
           toast({
@@ -101,6 +93,11 @@ const Index = () => {
           });
         }, 0);
       }
+
+      // After the state update, actually change the player
+      setTimeout(() => {
+        setCurrentPlayer(nextPlayer);
+      }, 0);
 
       return newMarkers;
     });
