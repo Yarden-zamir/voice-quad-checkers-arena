@@ -25,11 +25,11 @@ export const useSpeechRecognition = ({ onResult, onError, onListeningChange }: S
       
       console.log("Loading Whisper model...");
       
-      // Initialize the Whisper model
+      // Initialize the Whisper model using @huggingface/transformers
+      // Remove the quantized property as it's not recognized in the type definition
       whisperRef.current = await pipeline(
         "automatic-speech-recognition",
-        "onnx-community/whisper-tiny.en",
-        { quantized: true }  // Use quantized model for smaller size
+        "onnx-community/whisper-tiny.en"
       );
       
       setIsInitialized(true);
