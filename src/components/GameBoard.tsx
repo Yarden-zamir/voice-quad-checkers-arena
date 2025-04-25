@@ -18,7 +18,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ markers, currentPlayer, onCellCli
 
   return (
     <div className="py-16 px-4 bg-gray-100 min-h-screen relative">
-      <div className="fixed top-24 right-4 z-20 flex flex-col gap-4">
+      <div className="fixed top-4 right-4 z-20 flex flex-col gap-4">
         <div className="flex items-center gap-2 bg-white p-2 rounded-lg shadow">
           <Switch
             id="hide-history"
