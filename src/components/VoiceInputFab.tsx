@@ -168,7 +168,7 @@ const VoiceInputFab: React.FC<VoiceInputFabProps> = ({
       className={cn(
         "fixed bottom-8 left-8 rounded-full w-16 h-16 p-0 shadow-lg transition-all duration-300 ease-in-out",
         {
-          "w-72 h-72": fullScreen,
+          "w-72 h-72 left-1/2 -translate-x-1/2": fullScreen, // Center the button when full screen
           "animate-pulse": isLoading && !isListening,
           "hover:scale-105": !fullScreen,
           "hover:scale-102": fullScreen,
@@ -194,3 +194,4 @@ const VoiceInputFab: React.FC<VoiceInputFabProps> = ({
 };
 
 export default VoiceInputFab;
+
