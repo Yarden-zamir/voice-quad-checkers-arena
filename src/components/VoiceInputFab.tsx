@@ -13,6 +13,39 @@ const VoiceInputFab: React.FC<VoiceInputFabProps> = ({ onCoordinatesReceived }) 
   const { toast } = useToast();
   const recognition = useRef<SpeechRecognition | null>(null);
 
+  const extractNumbers = (text: string): number[] => {
+    const spacedText = text.replace(/(\d)(?=\d)/g, '$1 ');
+    return spacedText.split(/\s+/).map(Number).filter(num => !isNaN(num));
+  };
+
+  const handleCoordinates = (text: string) => {
+    const numbers = extractNumbers(text);
+    
+    if (numbers.length >= 3) {
+      const [x, y, z] = numbers;
+      if (x >= 1 && x <= 4 && y >= 1 && y <= 4 && z >= 1 && z <= 4) {
+        toast({
+          title: "Coordinates Recognized",
+          description: `Position: ${x}, ${y}, ${z}`,
+          duration: 3000,
+        });
+        onCoordinatesReceived(x, y, z);
+      } else {
+        toast({
+          title: "Invalid Coordinates",
+          description: "Coordinates must be between 1 and 4",
+          duration: 3000,
+        });
+      }
+    } else {
+      toast({
+        title: "No Coordinates Found",
+        description: `You said: "${text}". Try saying three numbers, like '2 3 4'`,
+        duration: 5000,
+      });
+    }
+  };
+
   const initializeSpeechRecognition = () => {
     if (!recognition.current) {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -52,36 +85,7 @@ const VoiceInputFab: React.FC<VoiceInputFabProps> = ({ onCoordinatesReceived }) 
           duration: 5000,
         });
         
-        const coordinatesMatch = text.match(/(\d+)\D+(\d+)\D+(\d+)/);
-        
-        if (coordinatesMatch) {
-          const x = parseInt(coordinatesMatch[1]);
-          const y = parseInt(coordinatesMatch[2]);
-          const z = parseInt(coordinatesMatch[3]);
-          
-          if (!isNaN(x) && !isNaN(y) && !isNaN(z)) {
-            if (x >= 1 && x <= 4 && y >= 1 && y <= 4 && z >= 1 && z <= 4) {
-              toast({
-                title: "Coordinates Recognized",
-                description: `Position: ${x}, ${y}, ${z}`,
-                duration: 3000,
-              });
-              onCoordinatesReceived(x, y, z);
-            } else {
-              toast({
-                title: "Invalid Coordinates",
-                description: "Coordinates must be between 1 and 4",
-                duration: 3000,
-              });
-            }
-          }
-        } else {
-          toast({
-            title: "No Coordinates Found",
-            description: `You said: "${text}". Try saying three numbers, like '2 3 4'`,
-            duration: 5000,
-          });
-        }
+        handleCoordinates(text);
         setIsListening(false);
         setIsLoading(false);
       };
