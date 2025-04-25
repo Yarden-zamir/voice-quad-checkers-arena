@@ -1,7 +1,7 @@
 
 import React, { useState, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
-import { Mic, MicOff } from "lucide-react";
+import { Mic, MicOff, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
 
@@ -75,7 +75,7 @@ const VoiceController: React.FC<VoiceControllerProps> = ({
     }
   }, [onCoordinatesReceived, toast]);
 
-  const { startListening, stopListening } = useSpeechRecognition({
+  const { startListening, stopListening, isModelLoading } = useSpeechRecognition({
     onResult: handleTranscriptResult,
     onError: (error) => {
       toast({
@@ -92,12 +92,21 @@ const VoiceController: React.FC<VoiceControllerProps> = ({
 
   const handlePointerDown = () => {
     console.log("Button pressed - starting listening");
-    startListening();
+    if (!isModelLoading) {
+      startListening();
+    } else {
+      toast({
+        title: "Model is loading",
+        description: "Please wait for the speech recognition model to load"
+      });
+    }
   };
 
   const handlePointerUp = () => {
     console.log("Button released - stopping listening");
-    stopListening();
+    if (isListening) {
+      stopListening();
+    }
   };
 
   // Handle pointer leave to prevent button staying in active state if pointer leaves while pressed
@@ -126,15 +135,19 @@ const VoiceController: React.FC<VoiceControllerProps> = ({
           select-none 
           transition-colors
           duration-200
-          ${isListening ? 'bg-red-500 hover:bg-red-600' : 'bg-primary hover:bg-primary/90'}
+          ${isModelLoading ? 'bg-yellow-500 hover:bg-yellow-600' : 
+            isListening ? 'bg-red-500 hover:bg-red-600' : 'bg-primary hover:bg-primary/90'}
         `}
       >
-        {isListening ? 
-          <MicOff className="h-8 w-8 mb-1" /> : 
+        {isModelLoading ? (
+          <Loader2 className="h-8 w-8 mb-1 animate-spin" />
+        ) : isListening ? (
+          <MicOff className="h-8 w-8 mb-1" />
+        ) : (
           <Mic className="h-8 w-8 mb-1" />
-        }
+        )}
         <span className="text-sm select-none">
-          {isListening ? 'Listening...' : 'Hold to Speak'}
+          {isModelLoading ? 'Loading...' : isListening ? 'Listening...' : 'Hold to Speak'}
         </span>
       </Button>
     </div>

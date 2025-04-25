@@ -1,4 +1,7 @@
 
+import { useState, useRef, useCallback } from 'react';
+import { pipeline } from '@huggingface/transformers';
+
 interface SpeechRecognitionProps {
   onResult: (transcript: string) => void;
   onError: (error: string) => void;
@@ -6,89 +9,126 @@ interface SpeechRecognitionProps {
 }
 
 export const useSpeechRecognition = ({ onResult, onError, onListeningChange }: SpeechRecognitionProps) => {
-  // Use a closure to store the recognition instance
-  let recognitionInstance: SpeechRecognition | null = null;
-
-  const startListening = () => {
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(false);
+  const whisperRef = useRef<any>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  
+  // Initialize Whisper model
+  const initializeWhisper = useCallback(async () => {
+    if (isInitialized || isInitializing) return;
+    
     try {
-      // Stop any existing recognition session first
-      if (recognitionInstance) {
-        recognitionInstance.abort();
-        recognitionInstance = null;
+      setIsInitializing(true);
+      if (onListeningChange) onListeningChange(true);
+      
+      console.log("Loading Whisper model...");
+      
+      // Initialize the Whisper model
+      whisperRef.current = await pipeline(
+        "automatic-speech-recognition",
+        "onnx-community/whisper-tiny.en",
+        { quantized: true }  // Use quantized model for smaller size
+      );
+      
+      setIsInitialized(true);
+      console.log("Whisper model loaded successfully");
+      
+    } catch (error) {
+      console.error("Failed to initialize Whisper:", error);
+      onError("Failed to initialize speech recognition model");
+      if (onListeningChange) onListeningChange(false);
+    } finally {
+      setIsInitializing(false);
+    }
+  }, [isInitialized, isInitializing, onError, onListeningChange]);
+  
+  const startListening = useCallback(async () => {
+    try {
+      // Make sure model is initialized
+      if (!isInitialized && !isInitializing) {
+        await initializeWhisper();
       }
-
-      // Get the appropriate SpeechRecognition interface
-      const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
       
-      if (!SpeechRecognitionAPI) {
-        onError("Speech recognition not supported in your browser");
-        return;
+      // Stop any existing recording session first
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
+        mediaRecorderRef.current.stop();
       }
-
-      // Create a new instance
-      recognitionInstance = new SpeechRecognitionAPI();
       
-      // Configure for optimal offline use
-      recognitionInstance.continuous = false;
-      recognitionInstance.interimResults = false;
-      recognitionInstance.lang = 'en-US';
+      console.log("Starting audio recording...");
+      audioChunksRef.current = [];
       
-      // Note: We can't set serviceURI as it's not in the TypeScript definition
-      // But we can optimize other settings for offline use
-
+      // Request microphone access
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      
+      // Create media recorder
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      
       // Set up event handlers
-      recognitionInstance.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        console.log("Speech recognized:", transcript);
-        onResult(transcript);
-      };
-
-      recognitionInstance.onerror = (event) => {
-        if (event.error === 'network' || event.error === 'service-not-allowed') {
-          console.log("Network or service error - attempting to use offline capabilities");
-          // The browser should automatically try to use offline recognition
-          // No need to set serviceURI as it's not in the TypeScript definition
-        } else if (event.error !== 'aborted') {
-          console.error("Speech recognition error:", event.error);
-          onError(`Error: ${event.error}`);
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
         }
       };
-
-      recognitionInstance.onstart = () => {
-        console.log("Speech recognition started");
-        if (onListeningChange) onListeningChange(true);
-      };
-
-      recognitionInstance.onend = () => {
-        console.log("Speech recognition ended");
+      
+      mediaRecorder.onstop = async () => {
+        console.log("Processing audio...");
         if (onListeningChange) onListeningChange(false);
+        
+        try {
+          // Convert audio chunks to blob
+          const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+          
+          // Process audio with Whisper
+          if (whisperRef.current) {
+            // Create a File object from the Blob
+            const audioFile = new File([audioBlob], "recording.webm", { type: 'audio/webm' });
+            
+            console.log("Transcribing with Whisper...");
+            const result = await whisperRef.current(audioFile);
+            console.log("Whisper result:", result);
+            
+            if (result && result.text) {
+              onResult(result.text);
+            } else {
+              onError("No speech detected");
+            }
+          } else {
+            onError("Speech recognition model not initialized");
+          }
+        } catch (error) {
+          console.error("Error processing audio:", error);
+          onError("Failed to process speech");
+        } finally {
+          // Close all audio tracks
+          stream.getTracks().forEach(track => track.stop());
+        }
       };
-
-      // Start the recognition
-      console.log("Starting speech recognition");
-      recognitionInstance.start();
+      
+      // Start recording
+      mediaRecorder.start();
+      if (onListeningChange) onListeningChange(true);
+      console.log("Recording started");
+      
     } catch (error) {
       console.error("Failed to start speech recognition:", error);
       onError("Speech recognition failed to start");
       if (onListeningChange) onListeningChange(false);
     }
-  };
-
-  const stopListening = () => {
-    if (recognitionInstance) {
-      console.log("Stopping speech recognition");
-      try {
-        recognitionInstance.stop();
-      } catch (error) {
-        console.error("Error stopping speech recognition:", error);
-      } finally {
-        recognitionInstance = null;
-      }
+  }, [isInitialized, isInitializing, initializeWhisper, onListeningChange, onResult, onError]);
+  
+  const stopListening = useCallback(() => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
+      console.log("Stopping recording");
+      mediaRecorderRef.current.stop();
     }
-  };
-
+  }, []);
+  
   return {
     startListening,
-    stopListening
+    stopListening,
+    isModelLoading: isInitializing
   };
 };
