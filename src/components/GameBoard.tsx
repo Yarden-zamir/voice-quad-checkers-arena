@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import Board from './Board';
 import { Toggle } from "@/components/ui/toggle";
@@ -33,7 +34,8 @@ const GameBoard: React.FC<GameBoardProps> = ({
         <Toggle
           pressed={hideHistory}
           onPressedChange={setHideHistory}
-          className="shadow-sm"
+          className="shadow-sm data-[state=on]:bg-blue-100"
+          aria-label={hideHistory ? "Show History" : "Hide History"}
         >
           <History className="h-4 w-4 mr-2" />
           {hideHistory ? 'Show History' : 'Hide History'}
@@ -42,20 +44,21 @@ const GameBoard: React.FC<GameBoardProps> = ({
         <Toggle
           pressed={isHidden}
           onPressedChange={setIsHidden}
-          className="shadow-sm"
+          className="shadow-sm data-[state=on]:bg-blue-100"
+          aria-label={isHidden ? "Show Board" : "Hide Board"}
         >
           {isHidden ? <Eye className="h-4 w-4 mr-2" /> : <EyeOff className="h-4 w-4 mr-2" />}
           {isHidden ? 'Show Board' : 'Hide Board'}
         </Toggle>
 
-        <Toggle
-          pressed={false}
-          onPressedChange={() => onResetGame()}
-          className="shadow-sm"
+        <button
+          onClick={onResetGame}
+          className="inline-flex items-center justify-center rounded-md text-sm font-medium shadow-sm px-4 py-2 bg-white hover:bg-gray-100 transition-colors"
+          aria-label="Reset Game"
         >
           <RotateCcw className="h-4 w-4 mr-2" />
           Reset Game
-        </Toggle>
+        </button>
       </div>
       
       <div className="pt-4 px-4">
