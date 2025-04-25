@@ -1,8 +1,5 @@
-
 import { useState, useCallback, useRef, useEffect } from 'react';
 import GameBoard from '../components/GameBoard';
-import { Settings } from '../components/Settings';
-import { TileSizeProvider } from '../contexts/TileSizeContext';
 import { useToast } from "@/hooks/use-toast";
 import { playErrorSound, playWinSound } from '../utils/audio';
 import { checkWin } from '../utils/winConditions';
@@ -134,19 +131,16 @@ const Index = () => {
   const bgColor = currentPlayer === 1 ? 'bg-purple-500/20' : 'bg-blue-500/20';
 
   return (
-    <TileSizeProvider>
-      <div className={`relative min-h-screen transition-colors duration-300 ${bgColor}`}>
-        <Settings />
-        <WinCelebration isActive={gameOver} />
-        <GameBoard 
-          markers={markers}
-          currentPlayer={currentPlayer}
-          onCellClick={handleCellClick}
-          onResetGame={resetGame}
-          lastMove={lastMove}
-        />
-      </div>
-    </TileSizeProvider>
+    <div className={`relative min-h-screen transition-colors duration-300 ${bgColor}`}>
+      <WinCelebration isActive={gameOver} />
+      <GameBoard 
+        markers={markers}
+        currentPlayer={currentPlayer}
+        onCellClick={handleCellClick}
+        onResetGame={resetGame}
+        lastMove={lastMove}
+      />
+    </div>
   );
 };
 
