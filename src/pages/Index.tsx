@@ -1,8 +1,9 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import GameBoard from '../components/GameBoard';
-import { useToast } from "@/components/ui/use-toast";
-import { playErrorSound } from '../utils/audio';
+import { useToast } from "@/hooks/use-toast";
+import { playErrorSound, playWinSound } from '../utils/audio';
 import { checkWin } from '../utils/winConditions';
+import WinCelebration from '../components/WinCelebration';
 
 const Index = () => {
   const { toast } = useToast();
@@ -16,13 +17,9 @@ const Index = () => {
     [[0,0,0,0], [0,0,0,0], [0,0,0,0], [0,0,0,0]]
   ]);
   
-  // Use a ref to prevent state updates during render
   const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  
-  // Use a ref to track the current player to avoid closure issues
   const currentPlayerRef = useRef(currentPlayer);
-  
-  // Keep the ref in sync with the state
+
   useEffect(() => {
     currentPlayerRef.current = currentPlayer;
   }, [currentPlayer]);
@@ -41,7 +38,6 @@ const Index = () => {
       return;
     }
 
-    // Get the current player from the ref to avoid stale closure issues
     const player = currentPlayerRef.current;
 
     setMarkers(prev => {
@@ -78,11 +74,11 @@ const Index = () => {
       
       setLastMove({ x, y, z });
       
-      // Switch player after valid move
       const nextPlayer = player === 1 ? 2 : 1;
       
       if (checkWin(newMarkers, player)) {
         setGameOver(true);
+        playWinSound();
         if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
         toastTimeoutRef.current = setTimeout(() => {
           toast({
@@ -103,7 +99,6 @@ const Index = () => {
           });
         }, 0);
         
-        // Only switch player if game is not over
         setTimeout(() => {
           setCurrentPlayer(nextPlayer);
         }, 0);
@@ -117,6 +112,7 @@ const Index = () => {
 
   return (
     <div className={`relative min-h-screen transition-colors duration-300 ${bgColor}`}>
+      <WinCelebration isActive={gameOver} />
       {gameOver && (
         <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-10 bg-white/10 backdrop-blur-md px-6 py-3 rounded-full">
           <h1 className="text-2xl font-bold text-white">
