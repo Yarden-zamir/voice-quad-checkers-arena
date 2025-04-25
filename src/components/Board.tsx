@@ -32,6 +32,7 @@ const Board: React.FC<BoardProps> = ({ markers, currentPlayer, onCellClick, hide
         key={`cell-${x}-${y}-${z}`}
         className={`${color} aspect-square flex items-center justify-center border border-gray-400 cursor-pointer hover:opacity-80 transition-opacity text-xs`}
         onClick={() => onCellClick(x, y, z)}
+        style={{ transform: `scale(${tileSize})` }}
       >
         {!shouldHideCell && value !== 0 && (
           <span className="text-white font-bold text-xs">
@@ -49,15 +50,7 @@ const Board: React.FC<BoardProps> = ({ markers, currentPlayer, onCellClick, hide
 
   const renderGrid = (gridIndex: number) => {
     return (
-      <div 
-        key={`grid-${gridIndex}`} 
-        className="grid grid-cols-4 gap-0.5 mx-auto"
-        style={{ 
-          transform: `scale(${tileSize})`, 
-          transformOrigin: 'center',
-          width: 'fit-content'
-        }}
-      >
+      <div key={`grid-${gridIndex}`} className="grid grid-cols-4 gap-0.5 m-0.5">
         {Array.from({ length: 4 }, (_, y) => (
           Array.from({ length: 4 }, (_, z) => (
             renderCell(gridIndex, y, z)
@@ -68,19 +61,15 @@ const Board: React.FC<BoardProps> = ({ markers, currentPlayer, onCellClick, hide
   };
 
   return (
-    <div className="flex flex-col justify-center items-center w-full">
-      <div className="flex flex-col items-center w-full max-w-md mx-auto">
-        {Array.from({ length: 4 }, (_, index) => (
-          <div key={`grid-container-${index}`} className="mb-8">
-            {renderGrid(index)}
-          </div>
-        ))}
+    <div className="flex flex-wrap justify-center items-center gap-1 max-w-full">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-1 w-full max-w-2xl mx-auto px-1">
+        {Array.from({ length: 4 }, (_, index) => renderGrid(index))}
       </div>
-      <div className="fixed bottom-24 left-0 right-0 text-center">
-        <div className="inline-block px-6 py-3 bg-white rounded-full shadow-md">
-          <span className="font-bold">Current Player: </span>
-          <span className={`${currentPlayer === 1 ? "text-purple-500" : "text-blue-500"} font-bold`}>
-            Player {currentPlayer} ({currentPlayer === 1 ? 'X' : 'O'})
+      <div className="w-full text-center mt-2">
+        <div className="inline-block px-4 py-2 bg-white rounded-lg shadow">
+          <span className="font-bold text-sm">Current Player: </span>
+          <span className={`${currentPlayer === 1 ? "text-purple-500" : "text-blue-500"} font-bold text-sm`}>
+            {currentPlayer === 1 ? 'Player 1 (X)' : 'Player 2 (O)'}
           </span>
         </div>
       </div>

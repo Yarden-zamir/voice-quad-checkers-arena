@@ -30,16 +30,16 @@ const GameBoard: React.FC<GameBoardProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 pb-32">
-      <div className="sticky top-0 z-20 flex justify-center gap-2 bg-white/80 backdrop-blur-sm py-3 px-2 shadow-md">
+    <div className="min-h-screen bg-gray-100">
+      <div className="sticky top-0 z-20 flex justify-center gap-4 bg-white/80 backdrop-blur-sm py-4 px-4 shadow-md">
         <Toggle
           pressed={hideHistory}
           onPressedChange={setHideHistory}
           variant="outline"
           aria-label={hideHistory ? "Show History" : "Hide History"}
-          className="data-[state=on]:bg-blue-500 data-[state=on]:text-white flex-1 max-w-[130px]"
+          className="data-[state=on]:bg-blue-500 data-[state=on]:text-white"
         >
-          <History className="h-4 w-4 mr-1" />
+          <History className="h-4 w-4 mr-2" />
           History
         </Toggle>
         
@@ -48,9 +48,9 @@ const GameBoard: React.FC<GameBoardProps> = ({
           onPressedChange={setIsHidden}
           variant="outline"
           aria-label={isHidden ? "Show Board" : "Hide Board"}
-          className="data-[state=on]:bg-blue-500 data-[state=on]:text-white flex-1 max-w-[130px]"
+          className="data-[state=on]:bg-blue-500 data-[state=on]:text-white"
         >
-          {isHidden ? <Eye className="h-4 w-4 mr-1" /> : <EyeOff className="h-4 w-4 mr-1" />}
+          {isHidden ? <Eye className="h-4 w-4 mr-2" /> : <EyeOff className="h-4 w-4 mr-2" />}
           Board
         </Toggle>
 
@@ -58,17 +58,16 @@ const GameBoard: React.FC<GameBoardProps> = ({
           onClick={onResetGame}
           variant="outline"
           aria-label="Reset Game"
-          className="flex-1 max-w-[130px]"
         >
-          <RotateCcw className="h-4 w-4 mr-1" />
+          <RotateCcw className="h-4 w-4 mr-2" />
           Reset
         </Button>
       </div>
       
       <div className="pt-4 px-4">
         {isHidden ? (
-          <div className="flex items-center justify-center h-[70vh]">
-            <p className="text-gray-400 text-2xl">Board Hidden</p>
+          <div className="absolute inset-0 bg-gray-800 flex items-center justify-center">
+            <p className="text-white text-2xl">Board Hidden</p>
           </div>
         ) : (
           <Board 

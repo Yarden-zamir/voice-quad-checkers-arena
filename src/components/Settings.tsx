@@ -22,13 +22,12 @@ export function Settings() {
       </PopoverTrigger>
       <PopoverContent className="w-80">
         <div className="space-y-4">
-          <h4 className="font-medium leading-none text-lg">Tile Size</h4>
+          <h4 className="font-medium leading-none">Tile Size</h4>
           <Slider
             defaultValue={[tileSize]}
             max={1.5}
             min={0.6}
             step={0.1}
-            className="py-4"
             onValueChange={(value) => setTileSize(value[0])}
           />
         </div>
