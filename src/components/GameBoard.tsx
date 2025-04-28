@@ -36,7 +36,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
         onResetGame={onResetGame}
       />
       
-      <div className="flex-1 pt-4 px-4 pb-4 overflow-auto">
+      <div className="flex-1 pt-4 px-4 pb-4 flex items-center">
         {isHidden ? (
           <div className="absolute inset-0 bg-gray-800 flex items-center justify-center">
             <p className="text-white text-2xl">Board Hidden</p>
