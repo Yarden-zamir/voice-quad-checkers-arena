@@ -33,7 +33,7 @@ const Board: React.FC<BoardProps> = ({
       <div 
         key={`cell-${x}-${y}-${z}`}
         onClick={() => onCellClick(x, y, z)}
-        className={`${cellColor} aspect-square flex items-center justify-center border border-gray-400 cursor-pointer hover:opacity-80 transition-opacity text-sm`}
+        className={`${cellColor} w-full h-full flex items-center justify-center border border-gray-400 cursor-pointer hover:opacity-80 transition-opacity text-sm`}
       >
         {!shouldHideCell && value !== 0 && (
           <span className="text-white font-bold">
@@ -52,11 +52,19 @@ const Board: React.FC<BoardProps> = ({
   const renderGrid = (gridIndex: number) => (
     <div 
       key={`grid-${gridIndex}`} 
-      className="grid grid-cols-4 gap-0.5 m-1 bg-gray-100 p-2 rounded-lg shadow-sm"
+      className="grid grid-cols-4 gap-0.5 m-1 bg-gray-100 p-2 rounded-lg shadow-sm h-full"
     >
-      {Array.from({ length: 4 }, (_, y) => (
-        Array.from({ length: 4 }, (_, z) => renderCell(gridIndex, y, z))
-      ))}
+      <div className="grid grid-cols-4 grid-rows-4 gap-0.5 h-full w-full">
+        {Array.from({ length: 4 }, (_, y) => (
+          <div key={`row-${y}`} className="contents">
+            {Array.from({ length: 4 }, (_, z) => (
+              <div key={`cell-container-${gridIndex}-${y}-${z}`} className="aspect-square w-full h-full">
+                {renderCell(gridIndex, y, z)}
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
     </div>
   );
 
