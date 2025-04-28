@@ -53,9 +53,9 @@ const Board: React.FC<BoardProps> = ({
   const renderGrid = (gridIndex: number) => (
     <div 
       key={`grid-${gridIndex}`} 
-      className="w-full aspect-square bg-gray-100 p-1 rounded-lg shadow-sm"
+      className="w-full aspect-square bg-gray-100 rounded-lg shadow-sm"
     >
-      <div className="grid grid-cols-4 grid-rows-4 gap-0.5 h-full w-full">
+      <div className="grid grid-cols-4 grid-rows-4 h-full w-full">
         {Array.from({ length: 4 }, (_, y) => (
           <div key={`row-${y}`} className="contents">
             {Array.from({ length: 4 }, (_, z) => (
@@ -70,9 +70,9 @@ const Board: React.FC<BoardProps> = ({
   );
 
   return (
-    <div className="flex flex-col items-center justify-center w-full h-full">
-      <div className="w-full max-w-full h-auto">
-        <div className="grid grid-cols-1 gap-1 w-full">
+    <div className="flex items-center justify-center w-full h-full">
+      <div className="w-full h-full flex items-center justify-center">
+        <div className="grid grid-cols-1 gap-0.5 max-h-full w-full">
           {Array.from({ length: 4 }, (_, index) => renderGrid(index))}
         </div>
       </div>
