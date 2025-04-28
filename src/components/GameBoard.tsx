@@ -39,8 +39,10 @@ const GameBoard: React.FC<GameBoardProps> = ({
           aria-label={hideHistory ? "Show History" : "Hide History"}
           className="data-[state=on]:bg-blue-500 data-[state=on]:text-white"
         >
-          <History className="h-4 w-4 mr-2" />
-          History
+          <div className="flex items-center">
+            <History className="h-4 w-4 mr-2" />
+            History
+          </div>
         </Toggle>
         
         <Toggle
@@ -50,8 +52,10 @@ const GameBoard: React.FC<GameBoardProps> = ({
           aria-label={isHidden ? "Show Board" : "Hide Board"}
           className="data-[state=on]:bg-blue-500 data-[state=on]:text-white"
         >
-          {isHidden ? <Eye className="h-4 w-4 mr-2" /> : <EyeOff className="h-4 w-4 mr-2" />}
-          Board
+          <div className="flex items-center">
+            {isHidden ? <Eye className="h-4 w-4 mr-2" /> : <EyeOff className="h-4 w-4 mr-2" />}
+            Board
+          </div>
         </Toggle>
 
         <Button
