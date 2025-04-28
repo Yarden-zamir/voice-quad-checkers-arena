@@ -31,7 +31,7 @@ const Board: React.FC<BoardProps> = ({
           </span>}
       </div>;
   };
-  const renderGrid = (gridIndex: number) => <div key={`grid-${gridIndex}`} className="aspect-square w-full bg-gray-100 p-2 rounded-lg shadow-sm min-w-0">
+  const renderGrid = (gridIndex: number) => <div key={`grid-${gridIndex}`} className="aspect-square w-full bg-gray-100 p-2 rounded-lg shadow-sm min-w-0 min-h-0">
       <div className="grid grid-cols-4 grid-rows-4 gap-0.5 h-full w-full">
         {Array.from({
         length: 4
