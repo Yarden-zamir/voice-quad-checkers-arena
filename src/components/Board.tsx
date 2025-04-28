@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 interface BoardProps {
@@ -52,13 +51,13 @@ const Board: React.FC<BoardProps> = ({
   const renderGrid = (gridIndex: number) => (
     <div 
       key={`grid-${gridIndex}`} 
-      className="grid grid-cols-4 gap-0.5 m-1 bg-gray-100 p-2 rounded-lg shadow-sm h-full"
+      className="aspect-square w-full bg-gray-100 p-2 rounded-lg shadow-sm"
     >
       <div className="grid grid-cols-4 grid-rows-4 gap-0.5 h-full w-full">
         {Array.from({ length: 4 }, (_, y) => (
           <div key={`row-${y}`} className="contents">
             {Array.from({ length: 4 }, (_, z) => (
-              <div key={`cell-container-${gridIndex}-${y}-${z}`} className="aspect-square w-full h-full">
+              <div key={`cell-container-${gridIndex}-${y}-${z}`} className="aspect-square">
                 {renderCell(gridIndex, y, z)}
               </div>
             ))}
