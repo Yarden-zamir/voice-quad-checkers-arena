@@ -57,11 +57,13 @@ const Board: React.FC<BoardProps> = ({ markers, currentPlayer, onCellClick, hide
   };
 
   return (
-    <div className="flex flex-col justify-center items-center gap-4 max-w-full">
-      <div className="flex flex-col gap-4 w-full max-w-md mx-auto px-2">
-        {Array.from({ length: 4 }, (_, index) => renderGrid(index))}
+    <div className="flex flex-col justify-center items-center gap-2 max-w-full h-[calc(100vh-8rem)]">
+      <div className="flex flex-col gap-2 w-full max-w-md mx-auto px-2 h-full">
+        <div className="grid grid-cols-1 gap-2 auto-rows-fr h-full">
+          {Array.from({ length: 4 }, (_, index) => renderGrid(index))}
+        </div>
       </div>
-      <div className="w-full text-center mt-4">
+      <div className="w-full text-center mt-2">
         <div className="inline-block px-4 py-2 bg-white rounded-lg shadow">
           <span className="font-bold">Current Player: </span>
           <span className={currentPlayer === 1 ? "text-purple-500 font-bold" : "text-blue-500 font-bold"}>
