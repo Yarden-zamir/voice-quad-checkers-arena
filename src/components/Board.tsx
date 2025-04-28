@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { AspectRatio } from "@/components/ui/aspect-ratio";
 
 interface BoardProps {
   markers: number[][][];
@@ -52,7 +53,7 @@ const Board: React.FC<BoardProps> = ({
   const renderGrid = (gridIndex: number) => (
     <div 
       key={`grid-${gridIndex}`} 
-      className="aspect-square w-full bg-gray-100 p-2 rounded-lg shadow-sm"
+      className="w-full aspect-square bg-gray-100 p-1 rounded-lg shadow-sm"
     >
       <div className="grid grid-cols-4 grid-rows-4 gap-0.5 h-full w-full">
         {Array.from({ length: 4 }, (_, y) => (
@@ -69,9 +70,9 @@ const Board: React.FC<BoardProps> = ({
   );
 
   return (
-    <div className="flex flex-col justify-center items-center w-full h-full">
-      <div className="w-full max-w-xs mx-auto px-2">
-        <div className="grid grid-cols-1 gap-2">
+    <div className="flex flex-col items-center justify-center w-full h-full">
+      <div className="w-full max-w-full h-auto">
+        <div className="grid grid-cols-1 gap-1 w-full">
           {Array.from({ length: 4 }, (_, index) => renderGrid(index))}
         </div>
       </div>

@@ -36,19 +36,21 @@ const GameBoard: React.FC<GameBoardProps> = ({
         onResetGame={onResetGame}
       />
       
-      <div className="flex-1 pt-4 px-4 pb-4 flex items-center">
+      <div className="flex-1 flex items-center justify-center px-1 py-1">
         {isHidden ? (
           <div className="absolute inset-0 bg-gray-800 flex items-center justify-center">
             <p className="text-white text-2xl">Board Hidden</p>
           </div>
         ) : (
-          <Board 
-            markers={markers} 
-            currentPlayer={currentPlayer} 
-            onCellClick={onCellClick} 
-            hideHistory={hideHistory}
-            lastMove={lastMove}
-          />
+          <div className="w-full h-full max-h-full flex items-center justify-center">
+            <Board 
+              markers={markers} 
+              currentPlayer={currentPlayer} 
+              onCellClick={onCellClick} 
+              hideHistory={hideHistory}
+              lastMove={lastMove}
+            />
+          </div>
         )}
       </div>
       
