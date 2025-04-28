@@ -69,9 +69,9 @@ const Board: React.FC<BoardProps> = ({
   );
 
   return (
-    <div className="flex flex-col justify-center items-center gap-4 max-w-full h-[calc(100vh-8rem)]">
-      <div className="flex flex-col gap-4 w-full max-w-sm mx-auto px-2">
-        <div className="grid grid-cols-1 gap-4">
+    <div className="flex flex-col justify-center items-center w-full h-full max-h-[calc(100vh-8rem)]">
+      <div className="flex flex-col gap-4 w-full max-w-sm mx-auto px-2 overflow-auto">
+        <div className="grid grid-cols-1 gap-4 pb-4">
           {Array.from({ length: 4 }, (_, index) => renderGrid(index))}
         </div>
       </div>

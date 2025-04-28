@@ -27,7 +27,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 flex flex-col">
       <HeaderControls 
         hideHistory={hideHistory}
         setHideHistory={setHideHistory}
@@ -36,7 +36,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
         onResetGame={onResetGame}
       />
       
-      <div className="pt-4 px-4 pb-4 h-[calc(100vh-4rem)] overflow-hidden">
+      <div className="flex-1 pt-4 px-4 pb-4 overflow-auto">
         {isHidden ? (
           <div className="absolute inset-0 bg-gray-800 flex items-center justify-center">
             <p className="text-white text-2xl">Board Hidden</p>
